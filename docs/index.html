@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>roflcookies.com</title>
     <style>
-        /* COLOR PALETTE: OSRS Earth Tones + GW-BASIC High Contrast */
         :root {
             --bg-deep: #050505;
             --osrs-brown: #494132;
@@ -17,7 +16,6 @@
 
         body {
             background-color: var(--bg-deep);
-            /* CRT Scanline Effect */
             background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
             color: var(--gw-white);
@@ -30,13 +28,9 @@
             overflow-x: hidden;
         }
 
-        /* Snow Canvas Layer */
         #snow {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 9999;
         }
@@ -47,7 +41,6 @@
             border: 4px double var(--osrs-border);
             box-shadow: 10px 10px 0px #000;
             position: relative;
-            z-index: 10;
         }
 
         header {
@@ -63,10 +56,7 @@
 
         .banner-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg?auto=compress&cs=tinysrgb&w=800');
             background-position: center 30%;
             background-size: cover;
@@ -89,8 +79,10 @@
         nav {
             display: flex;
             background: #222;
-            padding: 5px 5px 0 5px;
+            padding: 5px 15px 0 15px;
             border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 5;
         }
 
         .tab {
@@ -103,17 +95,49 @@
             font-size: 13px;
             margin-right: 5px;
             font-weight: bold;
+            display: block;
+            position: relative;
+            top: 0;
+            z-index: 1;
         }
 
-        .tab:hover {
-            background: var(--winter-steel);
-            color: var(--gw-cyan);
-            cursor: pointer;
+        /* Active tab overlap fix */
+        .tab.active-tab {
+            color: var(--gw-white);
+            top: 2px; 
+            z-index: 10;
         }
+
+        .tab:hover:not(.active-tab) {
+            background: var(--winter-steel);
+        }
+
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--osrs-brown);
+            min-width: 160px;
+            border: 2px solid var(--osrs-border);
+            z-index: 1000;
+            box-shadow: 5px 5px 0px #000;
+            top: 100%;
+        }
+        .dropdown-content a {
+            color: #d1c4a8;
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+            font-size: 12px;
+            border-bottom: 1px solid var(--osrs-border);
+        }
+        .dropdown-content a:hover { background-color: var(--winter-steel); color: var(--gw-cyan); }
+        .dropdown:hover .dropdown-content { display: block; }
 
         .content-area {
             background: #111;
-            margin: 15px;
+            /* Restored the 15px brown gutter between tabs and body */
+            margin: 15px; 
             border: 2px inset var(--osrs-border);
             padding: 30px;
             min-height: 350px;
@@ -137,13 +161,8 @@
             padding-bottom: 10px;
         }
 
-        p {
-            line-height: 1.6;
-            color: #ccc;
-        }
-
+        p { line-height: 1.6; color: #ccc; }
         .blink { animation: blinker 1s step-start infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
 
         footer {
             background: #000;
@@ -152,11 +171,6 @@
             border-top: 3px ridge var(--osrs-border);
             font-size: 11px;
             color: var(--osrs-border);
-        }
-
-        .hit-counter {
-            margin-top: 10px;
-            filter: grayscale(1) brightness(1.5);
         }
     </style>
 </head>
@@ -171,10 +185,18 @@
     </header>
 
     <nav>
-        <a href="index.html" class="tab">HOME</a>
+        <a href="index.html" class="tab active-tab">HOME</a>
         <a href="about.html" class="tab">THE_FOOL</a>
         <a href="archive.html" class="tab">ARCHIVE</a>
-        <a href="links.html" class="tab">IDK_WHATEVER</a>
+        
+        <div class="dropdown">
+            <a href="#" class="tab">EXTRAS &#9662;</a>
+            <div class="dropdown-content">
+                <a href="links.html">OUTBOUND</a>
+                <a href="secret.html">HIDDEN_FILE</a>
+                <a href="guestbook.html">GUESTBOOK</a>
+            </div>
+        </div>
     </nav>
 
     <div class="content-area">
@@ -186,7 +208,7 @@
 
     <footer>
         <div>SYSTEM STATUS: ONLINE</div>
-        <div class="hit-counter">
+        <div class="hit-counter" style="margin-top: 10px; filter: grayscale(1) brightness(1.5);">
             <script type="text/javascript" src="https://counter.websiteout.com/js/2/0/0/0"></script>
         </div>
     </footer>
@@ -216,10 +238,10 @@
 
     function draw() {
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'white';
         flakes.forEach(f => {
             ctx.globalAlpha = f.opacity;
-            ctx.fillRect(f.x, f.y, f.size, f.size); // Square "pixel" snow
+            ctx.fillRect(f.x, f.y, f.size, f.size);
             f.y += f.speed;
             if (f.y > height) f.y = -5;
         });
