@@ -146,24 +146,22 @@ class MainHeader extends HTMLElement {
         }
 
         // 3. Smart Loading Screen Logic
-        const loader = document.getElementById('loading-screen');
+		const loader = document.getElementById('loading-screen');
         if (loader) {
-            if (sessionStorage.getItem('booted')) {
-                // If user has already seen the boot screen this session, remove it instantly
-                loader.style.display = 'none';
-                loader.remove();
+            // Check if we already booted in this session
+            if (sessionStorage.getItem('booted') === 'true') {
+                loader.remove(); // No animation, no waiting, just delete it.
             } else {
-                // First time visit: show the animation, then mark as booted
+                // First load of the session
                 setTimeout(() => {
                     loader.style.opacity = '0';
                     setTimeout(() => {
                         loader.remove();
                         sessionStorage.setItem('booted', 'true');
                     }, 500);
-                }, 1000); // Keeps the "Initializing" text visible for 1 second
+                }, 1000); 
             }
         }
-    }
 
     initSnow() {
         const canvas = document.createElement('canvas');

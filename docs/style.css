@@ -37,6 +37,7 @@ body {
     justify-content: center;
     transition: opacity 0.5s ease;
     color: var(--gw-cyan);
+	pointer-events: none;
 }
 
 /* SHARED FRAME STYLES */
