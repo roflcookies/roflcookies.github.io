@@ -1,0 +1,64 @@
+/* GLOBAL VARIABLES */
+:root {
+    --bg-deep: #050505;
+    --osrs-brown: #494132;
+    --osrs-border: #72644b;
+    --gw-cyan: #55FFFF;
+    --gw-white: #FFFFFF;
+    --jester-red: #8b0000;
+    --winter-steel: #465362;
+}
+
+/* BASE BODY STYLES */
+body {
+    background-color: var(--bg-deep);
+    background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    color: var(--gw-white);
+    font-family: "Lucida Console", Monaco, monospace;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+/* THE LOADING SCREEN (GLOBAL) */
+#loading-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease;
+    color: var(--gw-cyan);
+}
+
+/* SHARED FRAME STYLES */
+#main-frame {
+    width: 765px;
+    background-color: var(--osrs-brown);
+    border: 4px double var(--osrs-border);
+    box-shadow: 10px 10px 0px #000;
+    position: relative;
+}
+
+footer {
+    background: #000;
+    text-align: center;
+    padding: 20px;
+    border-top: 3px ridge var(--osrs-border);
+    font-size: 11px;
+    color: var(--osrs-border);
+}
+
+.hit-counter {
+    margin-top: 10px;
+    filter: grayscale(1) brightness(1.5);
+    display: inline-block;
+}
