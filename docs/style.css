@@ -48,3 +48,33 @@ footer {
     filter: grayscale(1) brightness(1.5);
     display: inline-block;
 }
+
+/* ERROR STYLES */
+.error-text {
+    color: var(--jester-red);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.pixel-img {
+    border: 4px double var(--osrs-border);
+    background: #000;
+    filter: grayscale(1) contrast(120%);
+    image-rendering: pixelated; /* Keeps it looking retro */
+    max-width: 100%;
+}
+
+.btn-retro {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--osrs-brown);
+    border: 2px outset var(--osrs-border);
+    color: var(--gw-white);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.btn-retro:hover {
+    background: var(--winter-steel);
+    color: var(--gw-cyan);
+}
