@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roflcookies.com // THE_FOOL</title>
+    <style>
+        :root {
+            --bg-deep: #050505;
+            --osrs-brown: #494132;
+            --osrs-border: #72644b;
+            --gw-cyan: #55FFFF;
+            --gw-white: #FFFFFF;
+            --jester-red: #8b0000;
+            --winter-steel: #465362;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            color: var(--gw-white);
+            font-family: "Lucida Console", Monaco, monospace;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        #snow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #main-frame {
+            width: 765px;
+            background-color: var(--osrs-brown);
+            border: 4px double var(--osrs-border);
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+        }
+
+        header {
+            background: #000;
+            border-bottom: 3px ridge var(--osrs-border);
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .banner-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg?auto=compress&cs=tinysrgb&w=800');
+            background-position: center 30%;
+            background-size: cover;
+            opacity: 0.5;
+            filter: grayscale(1) contrast(180%) brightness(0.6);
+            image-rendering: pixelated;
+        }
+
+        .site-title {
+            position: relative;
+            z-index: 2;
+            color: var(--gw-cyan);
+            font-size: 48px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 4px 4px var(--jester-red), 6px 6px #000;
+        }
+
+        nav {
+            display: flex;
+            background: #222;
+            padding: 5px 15px 0 15px;
+            border-bottom: 2px solid #000;
+            position: relative;
+            z-index: 5;
+        }
+
+        .tab {
+            background: var(--osrs-brown);
+            border: 2px outset var(--osrs-border);
+            border-bottom: none;
+            padding: 10px 20px;
+            color: #d1c4a8;
+            text-decoration: none;
+            font-size: 13px;
+            margin-right: 5px;
+            font-weight: bold;
+            display: block;
+            position: relative;
+            top: 0;
+            z-index: 1;
+        }
+
+        /* Active tab overlap to hide the black line */
+        .tab.active-tab {
+            color: var(--gw-white);
+            top: 2px; 
+            z-index: 10;
+        }
+
+        .tab:hover:not(.active-tab) {
+            background: var(--winter-steel);
+        }
+
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--osrs-brown);
+            min-width: 160px;
+            border: 2px solid var(--osrs-border);
+            z-index: 1000;
+            box-shadow: 5px 5px 0px #000;
+            top: 100%;
+        }
+        .dropdown-content a {
+            color: #d1c4a8;
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+            font-size: 12px;
+            border-bottom: 1px solid var(--osrs-border);
+        }
+        .dropdown-content a:hover { background-color: var(--winter-steel); color: var(--gw-cyan); }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        .content-area {
+            background: #111;
+            margin: 15px; 
+            border: 2px inset var(--osrs-border);
+            padding: 30px;
+            min-height: 350px;
+            position: relative;
+        }
+
+        .content-area::before {
+            content: "◆";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--jester-red);
+            font-size: 24px;
+        }
+
+        h2 {
+            color: var(--gw-cyan);
+            font-size: 20px;
+            margin-top: 0;
+            border-bottom: 1px dashed var(--osrs-border);
+            padding-bottom: 10px;
+        }
+
+        h3 { color: var(--osrs-border); font-size: 16px; margin-top: 25px; }
+        p { line-height: 1.6; color: #ccc; }
+        .blink { animation: blinker 1s step-start infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        footer {
+            background: #000;
+            text-align: center;
+            padding: 20px;
+            border-top: 3px ridge var(--osrs-border);
+            font-size: 11px;
+            color: var(--osrs-border);
+        }
+
+        /* Image styling for the template */
+        .profile-img-container {
+            border: 4px double var(--osrs-border);
+            background: #000;
+            padding: 2px;
+            box-shadow: 5px 5px 0px #000;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="snow"></canvas>
+
+<div id="main-frame">
+    <header>
+        <div class="banner-overlay"></div>
+        <div class="site-title">ROFLCOOKIES</div>
+    </header>
+
+    <nav>
+        <a href="index.html" class="tab">HOME</a>
+        <a href="about.html" class="tab active-tab">THE_FOOL</a>
+        <a href="archive.html" class="tab">ARCHIVE</a>
+        
+        <div class="dropdown">
+            <a href="#" class="tab">EXTRAS &#9662;</a>
+            <div class="dropdown-content">
+                <a href="links.html">OUTBOUND</a>
+                <a href="secret.html">HIDDEN_FILE</a>
+                <a href="guestbook.html">GUESTBOOK</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-area">
+        <h2>IDENTIFICATION: THE_FOOL</h2>
+        
+        <div style="display: flex; gap: 25px; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <p><strong>NAME:</strong> oretseJ </p>
+                <p><strong>LOC:</strong> Penn's Woods </p>
+                <p><strong>BIO:</strong> ligma </p>
+                <p>This space serves as a central hub for ongoing experiments in digital alchemy and pixel-based chaos. The air here is thin and the connection is sharp. </p>
+            </div>
+
+            <div style="flex: 0 0 200px;">
+                <div class="profile-img-container">
+                    <img src="https://picsum.photos/id/1025/200/250?grayscale" alt="Profile" style="width: 100%; display: block; filter: contrast(120%) brightness(0.8); image-rendering: pixelated;">
+                </div>
+                <p style="font-size: 10px; text-align: center; color: var(--osrs-border); margin-top: 8px;">[FIG_01: ITS_A_DOG]</p>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px dashed var(--osrs-border); margin: 20px 0;">
+
+        <h3>TECHNICAL_LOGS</h3>
+        <p>System is stable. Snow is falling.</p>
+        <p>> _<span class="blink"></span></p>
+    </div>
+
+    <footer>
+        <div>SYSTEM STATUS: ONLINE</div>
+        <div class="hit-counter" style="margin-top: 10px; filter: grayscale(1) brightness(1.5);">
+            <script type="text/javascript" src="https://counter.websiteout.com/js/2/0/0/0"></script>
+        </div>
+    </footer>
+</div>
+
+<script>
+    const canvas = document.getElementById('snow');
+    const ctx = canvas.getContext('2d');
+    let width, height, flakes = [];
+
+    function init() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        flakes = [];
+        for (let i = 0; i < 150; i++) {
+            flakes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 1 + 0.5,
+                opacity: Math.random() * 0.5 + 0.3
+            });
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'white';
+        flakes.forEach(f => {
+            ctx.globalAlpha = f.opacity;
+            ctx.fillRect(f.x, f.y, f.size, f.size);
+            f.y += f.speed;
+            if (f.y > height) f.y = -5;
+        });
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', init);
+    init();
+    draw();
+</script>
+
+</body>
+</html>
