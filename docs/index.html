@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <title>roflcookies.com</title>
     <style>
+        /* THE BLINK FIX: Just flashes the text itself */
+        @keyframes blinker { 
+            50% { opacity: 0; } 
+        }
+        .blink { 
+            animation: blinker 1s step-start infinite;
+            color: var(--gw-cyan);
+            font-weight: bold;
+        }
+
         :root {
             --bg-deep: #050505;
             --osrs-brown: #494132;
@@ -101,7 +111,6 @@
             z-index: 1;
         }
 
-        /* Active tab overlap fix */
         .tab.active-tab {
             color: var(--gw-white);
             top: 2px; 
@@ -136,7 +145,6 @@
 
         .content-area {
             background: #111;
-            /* Restored the 15px brown gutter between tabs and body */
             margin: 15px; 
             border: 2px inset var(--osrs-border);
             padding: 30px;
@@ -162,7 +170,6 @@
         }
 
         p { line-height: 1.6; color: #ccc; }
-        .blink { animation: blinker 1s step-start infinite; }
 
         footer {
             background: #000;
@@ -171,6 +178,14 @@
             border-top: 3px ridge var(--osrs-border);
             font-size: 11px;
             color: var(--osrs-border);
+        }
+
+        /* HIT COUNTER FIX: Removing specific width/flex to prevent cropping */
+        .hit-counter {
+            margin-top: 10px;
+            filter: grayscale(1) brightness(1.5);
+            display: inline-block;
+            text-align: center;
         }
     </style>
 </head>
@@ -203,12 +218,12 @@
         <h2>DIRECTORY INDEX</h2>
         <p>Welcome to roflcookies.com.</p>
         <p>A work in progress. Use the navigation tabs above to explore the space.</p>
-        <p>> _<span class="blink"></span></p>
+        <p>> <span class="blink">_</span></p>
     </div>
 
     <footer>
         <div>COOKIES ROFL'ED</div>
-        <div class="hit-counter" style="margin-top: 10px; filter: grayscale(1) brightness(1.5);">
+        <div class="hit-counter">
             <script type="text/javascript" src="https://counter.websiteout.com/js/2/0/0/0"></script>
         </div>
     </footer>

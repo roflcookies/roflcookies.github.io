@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>roflcookies.com</title>
     <style>
+        /* Simple text-based blinker */
+        @keyframes blinker { 50% { opacity: 0; } }
+        .blink { 
+            animation: blinker 1s step-start infinite; 
+            color: var(--gw-cyan);
+        }
+
         :root {
             --bg-deep: #050505;
             --osrs-brown: #494132;
@@ -101,7 +108,6 @@
             z-index: 1;
         }
 
-        /* Active tab overlap to hide the black line */
         .tab.active-tab {
             color: var(--gw-white);
             top: 2px; 
@@ -162,8 +168,6 @@
 
         h3 { color: var(--osrs-border); font-size: 16px; margin-top: 25px; }
         p { line-height: 1.6; color: #ccc; }
-        .blink { animation: blinker 1s step-start infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
 
         footer {
             background: #000;
@@ -174,7 +178,12 @@
             color: var(--osrs-border);
         }
 
-        /* Image styling for the template */
+        .hit-counter {
+            margin-top: 10px;
+            filter: grayscale(1) brightness(1.5);
+            display: inline-block;
+        }
+
         .profile-img-container {
             border: 4px double var(--osrs-border);
             background: #000;
@@ -231,12 +240,12 @@
 
         <h3>TECHNICAL_LOGS</h3>
         <p>System is stable. Snow is falling.</p>
-        <p>> _<span class="blink"></span></p>
+        <p>> <span class="blink">_</span></p>
     </div>
 
     <footer>
         <div>SYSTEM STATUS: ONLINE</div>
-        <div class="hit-counter" style="margin-top: 10px; filter: grayscale(1) brightness(1.5);">
+        <div class="hit-counter">
             <script type="text/javascript" src="https://counter.websiteout.com/js/2/0/0/0"></script>
         </div>
     </footer>
