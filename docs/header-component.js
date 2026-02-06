@@ -124,7 +124,6 @@ class MainHeader extends HTMLElement {
         const shadowRoot = this.attachShadow({ mode: 'open' });
         shadowRoot.appendChild(headerTemplate.content.cloneNode(true));
 
-        // 1. Handle Active Tab Logic
         const path = window.location.pathname;
         const links = {
             'home-link': path === '/' || path.includes('index.html'),
@@ -140,40 +139,18 @@ class MainHeader extends HTMLElement {
             }
         });
 
-        // 2. Initialize Snow
         if (!document.getElementById('snow')) {
             this.initSnow();
         }
-
-        // 3. Smart Loading Screen Logic
-		const loader = document.getElementById('loading-screen');
-        if (loader) {
-            // Check if we already booted in this session
-            if (sessionStorage.getItem('booted') === 'true') {
-                loader.remove(); // No animation, no waiting, just delete it.
-            } else {
-                // First load of the session
-                setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.remove();
-                        sessionStorage.setItem('booted', 'true');
-                    }, 500);
-                }, 1000); 
-            }
-        }
+    }
 
     initSnow() {
         const canvas = document.createElement('canvas');
         canvas.id = 'snow';
         Object.assign(canvas.style, {
             position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            zIndex: '-1'
+            top: '0', left: '0', width: '100%', height: '100%',
+            pointerEvents: 'none', zIndex: '-1'
         });
         document.body.prepend(canvas);
 
