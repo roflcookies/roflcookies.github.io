@@ -121,10 +121,14 @@ class MainHeader extends HTMLElement {
     }
 
     connectedCallback() {
-        const shadowRoot = this.attachShadow({ mode: 'open' });
-        shadowRoot.appendChild(headerTemplate.content.cloneNode(true));
+        if (!this.shadowRoot) {
+            const shadowRoot = this.attachShadow({ mode: 'open' });
+            shadowRoot.appendChild(headerTemplate.content.cloneNode(true));
+        }
 
         const path = window.location.pathname;
+        const shadow = this.shadowRoot;
+
         const links = {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
@@ -134,7 +138,7 @@ class MainHeader extends HTMLElement {
 
         Object.keys(links).forEach(id => {
             if (links[id]) {
-                const el = shadowRoot.getElementById(id);
+                const el = shadow.getElementById(id);
                 if (el) el.classList.add('active');
             }
         });
