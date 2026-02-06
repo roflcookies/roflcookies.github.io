@@ -8,7 +8,7 @@ footerTemplate.innerHTML = `
         footer {
             background: #000;
             border: 3px ridge #72644b;
-            padding: 25px 0;
+            padding: 20px 0;
             text-align: center;
             color: #72644b;
             font-family: "Lucida Console", Monaco, monospace;
@@ -19,25 +19,21 @@ footerTemplate.innerHTML = `
         .footer-text {
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 15px;
-        }
-        .hit-counter {
-            display: block;
-            min-height: 50px; /* Forces space so we can see if it's there */
+            margin-bottom: 12px;
         }
         .hit-counter img {
             display: inline-block;
-            margin-top: 10px;
             border: none;
-            /* Ensures it doesn't get smoothed out */
+            /* Sharp pixel look for the numbers */
             image-rendering: pixelated; 
+            height: 20px;
         }
     </style>
     <footer>
         <div class="footer-text">COOKIES ROFL'ED</div>
         <div class="hit-counter">
-            <a href="https://www.freecounterstat.com" title="website counter">
-                <img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=gpdb28ygg4q4sezqtjm2gaj6lzqtpusl" border="0" title="website counter" alt="website counter">
+            <a href="https://www.freecounterstat.com" target="_blank" title="website counter">
+                <img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=gpdb28ygg4q4sezqtjm2gaj6lzqtpusl" alt="hit counter">
             </a>
         </div>
     </footer>

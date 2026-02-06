@@ -118,17 +118,20 @@ headerTemplate.innerHTML = `
 class MainHeader extends HTMLElement {
     constructor() {
         super();
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(headerTemplate.content.cloneNode(true));
     }
 
     connectedCallback() {
-        if (!this.shadowRoot) {
-            const shadowRoot = this.attachShadow({ mode: 'open' });
-            shadowRoot.appendChild(headerTemplate.content.cloneNode(true));
+        this.updateActiveTab();
+        if (!document.getElementById('snow')) {
+            this.initSnow();
         }
+    }
 
+    updateActiveTab() {
         const path = window.location.pathname;
         const shadow = this.shadowRoot;
-
         const links = {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
@@ -137,15 +140,12 @@ class MainHeader extends HTMLElement {
         };
 
         Object.keys(links).forEach(id => {
-            if (links[id]) {
-                const el = shadow.getElementById(id);
-                if (el) el.classList.add('active');
+            const el = shadow.getElementById(id);
+            if (el) {
+                if (links[id]) el.classList.add('active');
+                else el.classList.remove('active');
             }
         });
-
-        if (!document.getElementById('snow')) {
-            this.initSnow();
-        }
     }
 
     initSnow() {
@@ -153,8 +153,13 @@ class MainHeader extends HTMLElement {
         canvas.id = 'snow';
         Object.assign(canvas.style, {
             position: 'fixed',
-            top: '0', left: '0', width: '100%', height: '100%',
-            pointerEvents: 'none', zIndex: '-1'
+            top: '0', 
+            left: '0', 
+            width: '100%', 
+            height: '100%',
+            // Fix: Brought to front (9999) and made non-interactive so you can click links
+            pointerEvents: 'none', 
+            zIndex: '9999'
         });
         document.body.prepend(canvas);
 
