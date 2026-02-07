@@ -1,0 +1,126 @@
+class SnowEngine {
+    constructor() {
+        if (document.getElementById('snow-canvas')) return;
+
+        this.canvas = document.createElement('canvas');
+        this.canvas.id = 'snow-canvas';
+        this.ctx = this.canvas.getContext('2d');
+        this.flakes = [];
+        this.mouse = { x: -1000, y: -1000 };
+        this.lastTime = performance.now();
+
+        this.initCanvas();
+        this.addListeners();
+        this.resize(true); // Pass true to attempt loading state
+        requestAnimationFrame((t) => this.draw(t));
+
+        // Save positions when navigating away
+        window.addEventListener('beforeunload', () => this.saveState());
+    }
+
+    initCanvas() {
+        Object.assign(this.canvas.style, {
+            position: 'fixed',
+            top: '0', left: '0',
+            width: '100%', height: '100%',
+            pointerEvents: 'none',
+            zIndex: '9999'
+        });
+        document.body.prepend(this.canvas);
+    }
+
+    saveState() {
+        const state = this.flakes.map(f => ({ x: f.x, y: f.y, vx: f.vx, vy: f.vy }));
+        localStorage.setItem('snow_state', JSON.stringify(state));
+    }
+
+    addListeners() {
+        const updateMouse = (x, y) => { this.mouse.x = x; this.mouse.y = y; };
+        const resetMouse = () => { this.mouse.x = -1000; this.mouse.y = -1000; };
+
+        window.addEventListener('mousemove', (e) => updateMouse(e.clientX, e.clientY));
+        window.addEventListener('mouseout', resetMouse);
+        window.addEventListener('touchstart', (e) => updateMouse(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+        window.addEventListener('touchmove', (e) => updateMouse(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+        window.addEventListener('touchend', resetMouse);
+        window.addEventListener('resize', () => this.resize(false));
+    }
+
+    resize(attemptLoad) {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+
+        const saved = attemptLoad ? localStorage.getItem('snow_state') : null;
+        
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            this.flakes = parsed.map(f => ({
+                ...f,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 40 + 20,
+                opacity: Math.random() * 0.5 + 0.3
+            }));
+            localStorage.removeItem('snow_state'); // Clear it so it doesn't loop
+        } else {
+            this.flakes = Array.from({ length: 250 }, () => ({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 40 + 20,
+                opacity: Math.random() * 0.5 + 0.3,
+                vx: 0, vy: 0
+            }));
+        }
+    }
+
+    draw(currentTime) {
+        const dt = (currentTime - this.lastTime) / 1000;
+        this.lastTime = currentTime;
+
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = 'white';
+
+        this.flakes.forEach(f => {
+            const dx = f.x - this.mouse.x;
+            const dy = f.y - this.mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const radius = 80;
+
+            f.vx += (Math.random() - 0.5) * 1.2 * dt;
+
+            if (dist < radius) {
+                const gust = Math.random() * 150 + 50;
+                const force = ((radius - dist) / radius) * gust * dt;
+                const angle = Math.atan2(dy, dx);
+                f.vx += Math.cos(angle) * force;
+                f.vy += Math.sin(angle) * force;
+            }
+
+            const maxVel = 4;
+            f.vx = Math.max(-maxVel, Math.min(maxVel, f.vx));
+            f.vy = Math.max(-maxVel, Math.min(maxVel, f.vy));
+
+            f.x += f.vx;
+            f.y += (f.vy + (f.speed * dt));
+
+            const friction = Math.pow(0.95, dt * 60);
+            f.vx *= friction;
+            f.vy *= friction;
+
+            if (f.y > this.height) {
+                f.y = -10;
+                f.x = Math.random() * this.width;
+                f.vx = 0; f.vy = 0;
+            }
+
+            this.ctx.globalAlpha = f.opacity;
+            this.ctx.fillRect(f.x, f.y, f.size, f.size);
+        });
+
+        requestAnimationFrame((t) => this.draw(t));
+    }
+}
+
+new SnowEngine();

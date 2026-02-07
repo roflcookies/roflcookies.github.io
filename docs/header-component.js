@@ -124,9 +124,7 @@ class MainHeader extends HTMLElement {
 
     connectedCallback() {
         this.updateActiveTab();
-        if (!document.getElementById('snow')) {
-            this.initSnow();
-        }
+        this.initSnow();
     }
 
     updateActiveTab() {
@@ -149,52 +147,12 @@ class MainHeader extends HTMLElement {
     }
 
     initSnow() {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'snow';
-        Object.assign(canvas.style, {
-            position: 'fixed',
-            top: '0', 
-            left: '0', 
-            width: '100%', 
-            height: '100%',
-            // Fix: Brought to front (9999) and made non-interactive so you can click links
-            pointerEvents: 'none', 
-            zIndex: '9999'
-        });
-        document.body.prepend(canvas);
+        // If the script is already there, we're done.
+        if (document.querySelector('script[src="snow-engine.js"]')) return;
 
-        const ctx = canvas.getContext('2d');
-        let width, height, flakes = [];
-
-        const resize = () => {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            flakes = Array.from({ length: 150 }, () => ({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                size: Math.random() * 2 + 1,
-                speed: Math.random() * 1 + 0.5,
-                opacity: Math.random() * 0.5 + 0.3
-            }));
-        };
-
-        const draw = () => {
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = 'white';
-            flakes.forEach(f => {
-                ctx.globalAlpha = f.opacity;
-                ctx.fillRect(f.x, f.y, f.size, f.size);
-                f.y += f.speed;
-                if (f.y > height) f.y = -5;
-            });
-            requestAnimationFrame(draw);
-        };
-
-        window.addEventListener('resize', resize);
-        resize();
-        draw();
+        const script = document.createElement('script');
+        script.src = 'snow-engine.js';
+        document.head.appendChild(script);
     }
 }
 
