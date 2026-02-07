@@ -1,6 +1,6 @@
 /**
  * PACHINKO ENGINE - ROFLCOOKIES.COM
- * Fixed: Clearance for top ramps and "stuck ball" prevention.
+ * Updated: Mobile Touch Support + Coordinate Scaling
  */
 
 window.onload = () => {
@@ -38,7 +38,6 @@ window.onload = () => {
         Bodies.rectangle(WIDTH / 2, HEIGHT + 15, WIDTH, 40, { ...wallProps, label: 'pit' }),
         Bodies.rectangle(-5, HEIGHT / 2, 10, HEIGHT, wallProps),
         Bodies.rectangle(WIDTH + 5, HEIGHT / 2, 10, HEIGHT, wallProps),
-        // Ramps (Funnels)
         Bodies.rectangle(70, 45, 200, 30, { isStatic: true, angle: 0.7, render: { fillStyle: '#494132' } }),
         Bodies.rectangle(WIDTH - 70, 45, 200, 30, { isStatic: true, angle: -0.7, render: { fillStyle: '#494132' } })
     ]);
@@ -54,13 +53,9 @@ window.onload = () => {
         for (let j = 0; j < pegsInRow; j++) {
             const jitter = (Math.random() - 0.5) * 8; 
             const x = (j * colSpacing) + (isEven ? 40 : 20) + jitter;
-            const y = 120 + (i * rowSpacing); // Started lower to clear ramps
-
-            // SKIP PEGS THAT INTERSECT RAMPS
-            // If the peg is too high and too far to the left/right, don't spawn it.
+            const y = 120 + (i * rowSpacing);
             const sideMargin = 100;
             if (y < 160 && (x < sideMargin || x > WIDTH - sideMargin)) continue;
-
             Composite.add(world, Bodies.circle(x, y, 4, {
                 isStatic: true, restitution: 1.5, render: { fillStyle: '#72644b' }
             }));
@@ -83,7 +78,6 @@ window.onload = () => {
             }
             attempts++;
         } while (invalid && attempts < 100);
-
         cupPositions.push({ x: cx, y: cy });
         const sensor = Bodies.rectangle(cx, cy + 2, 20, 10, { isStatic: true, isSensor: true, label: 'cup', render: { fillStyle: '#55FFFF' } });
         const left = Bodies.rectangle(cx - 14, cy - 8, 4, 25, { isStatic: true, render: { fillStyle: '#55FFFF' } });
@@ -92,17 +86,39 @@ window.onload = () => {
         Composite.add(world, [sensor, left, right, bottom]);
     }
 
-    // --- INPUT ---
+    // --- INPUT HANDLING (MOBILE + DESKTOP) ---
     const container = document.getElementById('pachinko-canvas-container');
     const scoreEl = document.getElementById('score');
 
-    container.onmousedown = () => { isHolding = true; };
-    window.onmouseup = () => { isHolding = false; };
-    container.onmousemove = (e) => {
+    const updatePosition = (e) => {
         const rect = container.getBoundingClientRect();
-        mouseX = e.clientX - rect.left;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        
+        // This math accounts for the browser scaling the 500px game
+        const scaleX = WIDTH / rect.width;
+        mouseX = (clientX - rect.left) * scaleX;
     };
 
+    // Desktop
+    container.addEventListener('mousedown', (e) => { isHolding = true; updatePosition(e); });
+    window.addEventListener('mouseup', () => { isHolding = false; });
+    container.addEventListener('mousemove', updatePosition);
+
+    // Mobile
+    container.addEventListener('touchstart', (e) => { 
+        isHolding = true; 
+        updatePosition(e); 
+        if(e.cancelable) e.preventDefault(); 
+    }, { passive: false });
+    
+    window.addEventListener('touchend', () => { isHolding = false; });
+    
+    container.addEventListener('touchmove', (e) => { 
+        updatePosition(e); 
+        if(e.cancelable) e.preventDefault(); 
+    }, { passive: false });
+
+    // --- CORE LOOP ---
     Events.on(engine, 'beforeUpdate', () => {
         const now = Date.now();
         if (isHolding && credits >= BALL_COST && now - lastDropTime > 140) {
