@@ -2,48 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>roflcookies.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>roflcookies.com - Blog</title>
     
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="posts/manifest.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="header-component.js" type="text/javascript" defer></script>
     <script src="footer-component.js" type="text/javascript" defer></script>
 
     <style>
-        /* Specific tweaks for blog elements to match your OSRS vibe */
+        /* Blog Layout Styles */
         .blog-entry {
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px dotted var(--osrs-border, #72644b);
+            border-bottom: 1px dotted #72644b;
         }
-        .blog-entry h3 {
-            margin: 5px 0;
-            color: #55FFFF; /* Matches your DIRECTORY INDEX cyan */
-            cursor: pointer;
+        .blog-entry h3 { margin: 5px 0; color: #55FFFF; cursor: pointer; }
+        .blog-entry h3:hover { text-decoration: underline; }
+        .blog-date { font-size: 11px; color: #72644b; }
+        .blog-snippet { font-size: 14px; margin-top: 5px; color: #ccc; }
+        
+        /* The button you were missing - Forced visibility */
+        .back-btn { 
+            color: #55FFFF !important; 
+            cursor: pointer; 
+            display: inline-block; 
+            margin-bottom: 20px; 
+            font-weight: bold; 
+            text-decoration: none;
+            font-size: 16px;
         }
-        .blog-entry h3:hover {
-            text-decoration: underline;
+        .back-btn:hover { text-decoration: underline; color: #fff !important; }
+        
+        /* Search UI */
+        .search-container { margin-bottom: 25px; border-bottom: 2px solid #72644b; padding-bottom: 15px; }
+        .search-input {
+            background: #000; color: #55FFFF; border: 1px solid #72644b;
+            padding: 8px; width: 100%; box-sizing: border-box;
+            font-family: "Lucida Console", Monaco, monospace; outline: none;
         }
-        .blog-date {
-            font-size: 11px;
-            color: #72644b;
+        .search-input:focus { border-color: #55FFFF; }
+        
+        /* Pagination & Utility Buttons */
+        .pagination-controls {
+            margin-top: 20px; display: flex; justify-content: space-between;
+            color: #72644b; font-size: 14px; align-items: center;
         }
-        .blog-snippet {
-            font-size: 14px;
-            margin-top: 5px;
-        }
-        .back-btn {
-            color: #55FFFF;
-            cursor: pointer;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        /* Style for the actual markdown content */
-        #post-content h1 { color: #55FFFF; font-size: 20px; border-bottom: 1px solid #72644b; }
+        .page-btn { color: #55FFFF; cursor: pointer; font-weight: bold; padding: 5px; }
+        .page-btn.disabled { color: #444; cursor: default; pointer-events: none; }
+
+        #post-content img { max-width: 100%; height: auto; border: 1px solid #72644b; }
+        #post-content h1, #post-content h2 { color: #55FFFF; border-bottom: 1px solid #72644b; }
         #post-content a { color: #55FFFF; }
-        #post-content img { max-width: 100%; border: 1px solid #72644b; }
     </style>
 </head>
 <body>
@@ -52,8 +63,9 @@
         <main-header></main-header>
 
         <div class="content-area">
-            <div id="blog-dynamic-content">
-                <p>Loading log entries...</p>
+            <div id="blog-ui-top"></div>
+            <div id="blog-main-view">
+                <p>Initializing archive...</p>
             </div>
         </div>
 
@@ -63,56 +75,160 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const postID = params.get('post');
-        const container = document.getElementById('blog-dynamic-content');
+        const mainView = document.getElementById('blog-main-view');
+        const uiTop = document.getElementById('blog-ui-top');
+        
+        let currentPage = 0;
+        const POSTS_PER_PAGE = 10;
+        let currentFilteredPosts = [];
+        let retries = 0;
 
         function initBlog() {
-            if (typeof window.blogPosts === 'undefined') {
-                container.innerHTML = "<h2>ERROR</h2><p>Manifest missing.</p>";
+            if (!window.blogPosts) {
+                retries++;
+                if(retries > 20) {
+                    mainView.innerHTML = "<h2>SYSTEM ERROR</h2><p>Manifest missing at posts/manifest.js</p>";
+                    return;
+                }
+                setTimeout(initBlog, 100);
                 return;
             }
 
+            // Sort newest first
+            window.blogPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
             if (postID) {
+                uiTop.innerHTML = ""; // Hide search when viewing post
                 showFullPost(postID);
             } else {
-                showList(window.blogPosts);
+                renderSearchUI();
+                currentFilteredPosts = [...window.blogPosts];
+                renderView();
             }
         }
 
-        function showList(posts) {
-            let html = `<h2>LOG_ENTRIES</h2>`;
-            
-            // Sort newest first, take top 3
-            const latest = [...posts]
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 3);
+        function renderSearchUI() {
+            uiTop.innerHTML = `
+                <div class="search-container">
+                    <span style="font-size:12px; color:#72644b; display:block; margin-bottom:5px;">SEARCH_DATABASE:</span>
+                    <input type="text" id="blog-search" class="search-input" placeholder="Search titles or snippets..." onkeyup="handleSearch(this.value)">
+                </div>
+            `;
+        }
 
-            latest.forEach(post => {
+        function handleSearch(val) {
+            currentPage = 0;
+            const query = val.toLowerCase().trim();
+            
+            if (!query) {
+                currentFilteredPosts = [...window.blogPosts];
+            } else {
+                currentFilteredPosts = window.blogPosts.filter(p => {
+                    return p.title.toLowerCase().includes(query) || 
+                           p.snippet.toLowerCase().includes(query);
+                });
+            }
+            renderView();
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('blog-search');
+            if (searchInput) {
+                searchInput.value = "";
+                handleSearch(""); 
+            }
+        }
+
+        function renderView() {
+            const searchInput = document.getElementById('blog-search');
+            const query = searchInput ? searchInput.value.trim() : "";
+            
+            if (query === "") {
+                // Landing state: Latest 3
+                const latest = [...window.blogPosts].slice(0, 3);
+                showList(latest, "LATEST_LOGS", false);
+            } else {
+                // Search state: Paginated
+                const start = currentPage * POSTS_PER_PAGE;
+                const end = start + POSTS_PER_PAGE;
+                const pagedResults = currentFilteredPosts.slice(start, end);
+                showList(pagedResults, `SEARCH_RESULTS (${currentFilteredPosts.length})`, true);
+            }
+        }
+
+        function showList(posts, title, paginate) {
+            const searchInput = document.getElementById('blog-search');
+            const isSearching = searchInput && searchInput.value.trim() !== "";
+            
+            let html = `<h2>${title}</h2>`;
+            
+            if (isSearching) {
+                html += `<div style="margin-bottom: 20px;">
+                            <span class="page-btn" onclick="clearSearch()">[ CLEAR_SEARCH_AND_RETURN ]</span>
+                         </div>`;
+            }
+
+            if (posts.length === 0) {
+                html += "<p>No entries found.</p>";
+            }
+
+            posts.forEach(p => {
                 html += `
                     <div class="blog-entry">
-                        <div class="blog-date">${post.date}</div>
-                        <h3 onclick="location.search='?post=${post.id}'">${post.title}</h3>
-                        <div class="blog-snippet">${post.snippet}...</div>
+                        <div class="blog-date">${p.date}</div>
+                        <h3 onclick="window.location.search='?post=${p.id}'">${p.title}</h3>
+                        <div class="blog-snippet">${p.snippet}</div>
                     </div>
                 `;
             });
 
-            container.innerHTML = html + `<p>> <span class="blink">_</span></p>`;
+            if (paginate && currentFilteredPosts.length > POSTS_PER_PAGE) {
+                const max = Math.ceil(currentFilteredPosts.length / POSTS_PER_PAGE) - 1;
+                html += `
+                    <div class="pagination-controls">
+                        <span class="page-btn ${currentPage === 0 ? 'disabled' : ''}" 
+                              onclick="if(${currentPage}>0) changePage(-1)">[ < PREV ]</span>
+                        <span>PAGE ${currentPage + 1} / ${max + 1}</span>
+                        <span class="page-btn ${currentPage >= max ? 'disabled' : ''}" 
+                              onclick="if(${currentPage}<${max}) changePage(1)">[ NEXT > ]</span>
+                    </div>
+                `;
+            }
+            mainView.innerHTML = html + `<p>> <span class="blink">_</span></p>`;
+        }
+
+        function changePage(step) {
+            currentPage += step;
+            renderView();
+            window.scrollTo(0,0);
         }
 
         async function showFullPost(id) {
-            container.innerHTML = `<div class="back-btn" onclick="location.search=''">< RETURN_TO_INDEX</div><div id="post-content">Loading...</div>`;
-            
+            // BACK BUTTON RENDERED IMMEDIATELY HERE
+            mainView.innerHTML = `
+                <div class="back-btn" onclick="window.location.search=''">[ < RETURN_TO_INDEX ]</div>
+                <div id="post-content">Connecting to archive...</div>
+            `;
+
             try {
                 const res = await fetch(`posts/${id}.md`);
                 if (!res.ok) throw new Error();
                 const md = await res.text();
-                document.getElementById('post-content').innerHTML = marked.parse(md);
+                
+                if (window.marked) {
+                    document.getElementById('post-content').innerHTML = marked.parse(md);
+                } else {
+                    document.getElementById('post-content').innerText = md;
+                }
             } catch (e) {
-                document.getElementById('post-content').innerHTML = `<h2>404</h2><p>Entry not found.</p>`;
+                document.getElementById('post-content').innerHTML = `
+                    <h2 style="color: #55FFFF;">404 - NOT FOUND</h2>
+                    <p>Log entry <strong>${id}</strong> does not exist in the manifest.</p>
+                `;
             }
         }
 
-		window.addEventListener('DOMContentLoaded', initBlog);
+        window.onload = initBlog;
     </script>
 </body>
 </html>
