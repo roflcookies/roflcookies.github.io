@@ -60,7 +60,7 @@ footer {
     border: 4px double var(--osrs-border);
     background: #000;
     filter: grayscale(1) contrast(120%);
-    image-rendering: pixelated; /* Keeps it looking retro */
+    image-rendering: pixelated;
     max-width: 100%;
 }
 
@@ -77,4 +77,84 @@ footer {
 .btn-retro:hover {
     background: var(--winter-steel);
     color: var(--gw-cyan);
+}
+
+/* --- MIGRATED CONTENT STYLES --- */
+
+.content-area {
+    background: #111;
+    margin: 15px; 
+    border: 2px inset var(--osrs-border);
+    padding: 30px;
+    min-height: 350px;
+    position: relative;
+}
+
+/* Diamond aligned with H2 text */
+.content-area h2::after {
+    content: "◆"; 
+    position: absolute; 
+    right: 30px; 
+    top: 30px;
+    color: var(--jester-red); 
+    font-size: 24px;
+    line-height: 1;
+}
+
+h2 { 
+    color: var(--gw-cyan); 
+    border-bottom: 1px dashed var(--osrs-border); 
+    padding-bottom: 10px; 
+    margin-top: 0;
+}
+
+h3 { 
+    color: var(--osrs-border); 
+    margin-top: 25px; 
+}
+
+p { 
+    line-height: 1.6; 
+    color: #ccc; 
+}
+
+@keyframes blinker { 50% { opacity: 0; } }
+.blink { 
+    animation: blinker 1s step-start infinite; 
+    color: var(--gw-cyan); 
+}
+
+.profile-img-container { 
+    border: 4px double var(--osrs-border); 
+    background: #000; 
+    padding: 2px; 
+    box-shadow: 5px 5px 0px #000; 
+}
+
+.img-caption { 
+    color: var(--osrs-border); 
+    font-size: 12px; 
+    margin-top: 8px; 
+    text-align: center; 
+    font-style: italic; 
+}
+
+/* GUESTBOOK SPECIFIC */
+.guestbook-page {
+    padding: 15px;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.guestbook-wrapper {
+    flex-grow: 1;
+    width: 100%;
+}
+
+iframe {
+    width: 100%;
+    height: 150vh;
+    border: none;
+    background: transparent;
 }

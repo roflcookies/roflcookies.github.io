@@ -8,43 +8,6 @@
     <script src="header-component.js" type="text/javascript" defer></script>
     <script src="footer-component.js" type="text/javascript" defer></script>
     
-    <style>
-        /* PAGE-SPECIFIC STYLE */
-        @keyframes blinker { 50% { opacity: 0; } }
-        .blink { 
-            animation: blinker 1s step-start infinite;
-            color: var(--gw-cyan);
-            font-weight: bold;
-        }
-
-        .content-area {
-            background: #111;
-            margin: 15px; 
-            border: 2px inset var(--osrs-border);
-            padding: 30px;
-            min-height: 350px;
-            position: relative;
-        }
-
-        .content-area::before {
-            content: "◆";
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: var(--jester-red);
-            font-size: 24px;
-        }
-
-        h2 {
-            color: var(--gw-cyan);
-            font-size: 20px;
-            margin-top: 0;
-            border-bottom: 1px dashed var(--osrs-border);
-            padding-bottom: 10px;
-        }
-
-        p { line-height: 1.6; color: #ccc; }
-    </style>
 </head>
 <body>
 
