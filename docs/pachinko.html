@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>roflcookies.com</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <script src="pachinko.js" type="text/javascript" defer></script>
+
+    <style>
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 15px;
+        }
+
+        #pachinko-canvas-container {
+            border: 4px ridge #72644b;
+            background: #050505;
+            line-height: 0;
+            cursor: crosshair;
+            box-shadow: inset 0 0 40px #000;
+        }
+
+        .stats-panel {
+            width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a1a;
+            border: 2px solid #72644b;
+            padding: 12px 20px;
+            box-sizing: border-box;
+            font-family: "Lucida Console", Monaco, monospace;
+        }
+
+        .credits-text {
+            color: #55FFFF;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px #000;
+        }
+
+        .payout-guide {
+            color: #8b0000;
+            font-size: 11px;
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .instruction-footer {
+            color: #72644b;
+            font-size: 11px;
+            text-align: center;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <div class="game-wrapper">
+                
+                <div class="stats-panel">
+                    <div class="credits-text">
+                        CREDITS: <span id="score">100</span>
+                    </div>
+                    <div class="payout-guide">
+                        DROP: 5 CR<br>
+                        WIN: 30 CR
+                    </div>
+                </div>
+
+                <div id="pachinko-canvas-container"></div>
+
+                <div class="instruction-footer">
+                    HOLD MOUSE1 AT TOP TO DROP BALLS. 
+                    LAND IN CYAN CUPS TO WIN. THE BOTTOM PIT PAYS ZERO.
+                </div>
+
+            </div>
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+</body>
+</html>
