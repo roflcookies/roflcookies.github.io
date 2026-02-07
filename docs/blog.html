@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>roflcookies.com - Blog</title>
     
     <link rel="stylesheet" href="style.css">
@@ -23,7 +22,6 @@
         .blog-date { font-size: 11px; color: #72644b; }
         .blog-snippet { font-size: 14px; margin-top: 5px; color: #ccc; }
         
-        /* The button you were missing - Forced visibility */
         .back-btn { 
             color: #55FFFF !important; 
             cursor: pointer; 
@@ -98,7 +96,7 @@
             window.blogPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (postID) {
-                uiTop.innerHTML = ""; // Hide search when viewing post
+                uiTop.innerHTML = ""; 
                 showFullPost(postID);
             } else {
                 renderSearchUI();
@@ -144,11 +142,9 @@
             const query = searchInput ? searchInput.value.trim() : "";
             
             if (query === "") {
-                // Landing state: Latest 3
                 const latest = [...window.blogPosts].slice(0, 3);
                 showList(latest, "LATEST_LOGS", false);
             } else {
-                // Search state: Paginated
                 const start = currentPage * POSTS_PER_PAGE;
                 const end = start + POSTS_PER_PAGE;
                 const pagedResults = currentFilteredPosts.slice(start, end);
@@ -204,7 +200,6 @@
         }
 
         async function showFullPost(id) {
-            // BACK BUTTON RENDERED IMMEDIATELY HERE
             mainView.innerHTML = `
                 <div class="back-btn" onclick="window.location.search=''">[ < RETURN_TO_INDEX ]</div>
                 <div id="post-content">Connecting to archive...</div>
