@@ -1,7 +1,7 @@
 # Hello World
 This is my **first post** on the new blog!
 
-### Things I like:
+### This is a list:
 * one
 * two
 * three
