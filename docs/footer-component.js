@@ -21,20 +21,33 @@ footerTemplate.innerHTML = `
             text-transform: uppercase;
             margin-bottom: 12px;
         }
-        .hit-counter img {
+        #supabase-count {
+            display: flex;
+            justify-content: center;
+            gap: 1px;
+            min-height: 24px;
+        }
+        .digit {
+            width: 18px;
+            height: 24px;
+            background-image: url('assets/numbers.jpg');
+            background-repeat: no-repeat;
             display: inline-block;
-            border: none;
-            /* Sharp pixel look for the numbers */
-            image-rendering: pixelated; 
-            height: 20px;
+            image-rendering: pixelated;
+            /* Force grayscale via CSS */
+            filter: grayscale(100%) brightness(1.2);
         }
     </style>
     <footer>
         <div class="footer-text">COOKIES ROFL'ED</div>
-        <div class="hit-counter">
-            <a href="https://www.freecounterstat.com" target="_blank" title="website counter">
-                <img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=gpdb28ygg4q4sezqtjm2gaj6lzqtpusl" alt="hit counter">
-            </a>
+        <div id="supabase-count">
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
+            <div class="digit" style="background-position: 0px 0px;"></div>
         </div>
     </footer>
 `;
@@ -44,6 +57,40 @@ class MainFooter extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(footerTemplate.content.cloneNode(true));
+    }
+
+    connectedCallback() {
+        this.updateHitCounter();
+    }
+
+    async updateHitCounter() {
+        const SB_URL = 'https://yeqgovjxqfrmxlooizgt.supabase.co/rest/v1';
+        const SB_KEY = 'sb_publishable_o9JQwug9ZEvWqxt7S4lIpw_CNAsxPXa';
+        const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+
+        try {
+            await fetch(`${SB_URL}/rpc/increment_counter`, { method: 'POST', headers });
+            const res = await fetch(`${SB_URL}/counter?id=eq.1&select=hits`, { headers });
+            const data = await res.json();
+            
+            if (data && data[0]) {
+                const hits = data[0].hits.toString().padStart(7, '0');
+                const container = this.shadowRoot.getElementById('supabase-count');
+                
+                if (container) {
+                    container.innerHTML = ''; 
+                    hits.split('').forEach(num => {
+                        const digit = document.createElement('div');
+                        digit.className = 'digit';
+                        const xOffset = parseInt(num) * -18;
+                        digit.style.backgroundPosition = `${xOffset}px 0px`;
+                        container.appendChild(digit);
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("Counter Error:", e);
+        }
     }
 }
 
