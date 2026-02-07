@@ -11,10 +11,9 @@ class SnowEngine {
 
         this.initCanvas();
         this.addListeners();
-        this.resize(true); // Pass true to attempt loading state
+        this.resize(true); 
         requestAnimationFrame((t) => this.draw(t));
 
-        // Save positions when navigating away
         window.addEventListener('beforeunload', () => this.saveState());
     }
 
@@ -55,32 +54,41 @@ class SnowEngine {
         const saved = attemptLoad ? localStorage.getItem('snow_state') : null;
         
         if (saved) {
-            const parsed = JSON.parse(saved);
-            this.flakes = parsed.map(f => ({
-                ...f,
-                size: Math.random() * 2 + 1,
-                speed: Math.random() * 40 + 20,
-                opacity: Math.random() * 0.5 + 0.3
-            }));
-            localStorage.removeItem('snow_state'); // Clear it so it doesn't loop
+            try {
+                const parsed = JSON.parse(saved);
+                this.flakes = parsed.map(f => ({
+                    ...f,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 40 + 20,
+                    opacity: Math.random() * 0.5 + 0.3
+                }));
+            } catch(e) { this.createFreshFlakes(); }
+            localStorage.removeItem('snow_state');
         } else {
-            this.flakes = Array.from({ length: 250 }, () => ({
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
-                size: Math.random() * 2 + 1,
-                speed: Math.random() * 40 + 20,
-                opacity: Math.random() * 0.5 + 0.3,
-                vx: 0, vy: 0
-            }));
+            this.createFreshFlakes();
         }
     }
 
+    createFreshFlakes() {
+        this.flakes = Array.from({ length: 250 }, () => ({
+            x: Math.random() * this.width,
+            y: Math.random() * this.height, 
+            size: Math.random() * 2 + 1,
+            speed: Math.random() * 40 + 20,
+            opacity: Math.random() * 0.5 + 0.3,
+            vx: 0, vy: 0
+        }));
+    }
+
     draw(currentTime) {
-        const dt = (currentTime - this.lastTime) / 1000;
+        let dt = (currentTime - this.lastTime) / 1000;
         this.lastTime = currentTime;
 
+        // The Fix: If dt is zero (first frame) or huge (tab switch), 
+        // we use a standard 60fps frame time (0.016s).
+        if (dt <= 0 || dt > 0.1) dt = 0.016; 
+
         this.ctx.clearRect(0, 0, this.width, this.height);
-        this.ctx.fillStyle = 'white';
 
         this.flakes.forEach(f => {
             const dx = f.x - this.mouse.x;
@@ -116,6 +124,7 @@ class SnowEngine {
             }
 
             this.ctx.globalAlpha = f.opacity;
+            this.ctx.fillStyle = 'white';
             this.ctx.fillRect(f.x, f.y, f.size, f.size);
         });
 

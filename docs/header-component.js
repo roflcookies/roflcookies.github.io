@@ -102,7 +102,7 @@ headerTemplate.innerHTML = `
     <nav>
         <a href="index.html" class="tab" id="home-link">HOME</a>
         <a href="about.html" class="tab" id="about-link">THE_FOOL</a>
-        <a href="archive.html" class="tab" id="archive-link">ARCHIVE</a>
+        <a href="blog.html" class="tab" id="blog-link">BLOG</a>
         
         <div class="dropdown">
             <a href="#" class="tab" id="extras-link">EXTRAS &#9662;</a>
@@ -133,7 +133,7 @@ class MainHeader extends HTMLElement {
         const links = {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
-            'archive-link': path.includes('archive.html'),
+            'blog-link': path.includes('blog.html'),
             'extras-link': path.includes('guestbook.html') || path.includes('links.html') || path.includes('secret.html')
         };
 
