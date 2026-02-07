@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>blog - roflcookies.com</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="posts/manifest.js"></script>
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+
+    <style>
+        /* Specific tweaks for blog elements to match your OSRS vibe */
+        .blog-entry {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dotted var(--osrs-border, #72644b);
+        }
+        .blog-entry h3 {
+            margin: 5px 0;
+            color: #55FFFF; /* Matches your DIRECTORY INDEX cyan */
+            cursor: pointer;
+        }
+        .blog-entry h3:hover {
+            text-decoration: underline;
+        }
+        .blog-date {
+            font-size: 11px;
+            color: #72644b;
+        }
+        .blog-snippet {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .back-btn {
+            color: #55FFFF;
+            cursor: pointer;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        /* Style for the actual markdown content */
+        #post-content h1 { color: #55FFFF; font-size: 20px; border-bottom: 1px solid #72644b; }
+        #post-content a { color: #55FFFF; }
+        #post-content img { max-width: 100%; border: 1px solid #72644b; }
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <div id="blog-dynamic-content">
+                <p>Loading log entries...</p>
+            </div>
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const postID = params.get('post');
+        const container = document.getElementById('blog-dynamic-content');
+
+        function initBlog() {
+            if (typeof window.blogPosts === 'undefined') {
+                container.innerHTML = "<h2>ERROR</h2><p>Manifest missing.</p>";
+                return;
+            }
+
+            if (postID) {
+                showFullPost(postID);
+            } else {
+                showList(window.blogPosts);
+            }
+        }
+
+        function showList(posts) {
+            let html = `<h2>LOG_ENTRIES</h2>`;
+            
+            // Sort newest first, take top 3
+            const latest = [...posts]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 3);
+
+            latest.forEach(post => {
+                html += `
+                    <div class="blog-entry">
+                        <div class="blog-date">${post.date}</div>
+                        <h3 onclick="location.search='?post=${post.id}'">${post.title}</h3>
+                        <div class="blog-snippet">${post.snippet}...</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html + `<p>> <span class="blink">_</span></p>`;
+        }
+
+        async function showFullPost(id) {
+            container.innerHTML = `<div class="back-btn" onclick="location.search=''">< RETURN_TO_INDEX</div><div id="post-content">Loading...</div>`;
+            
+            try {
+                const res = await fetch(`posts/${id}.md`);
+                if (!res.ok) throw new Error();
+                const md = await res.text();
+                document.getElementById('post-content').innerHTML = marked.parse(md);
+            } catch (e) {
+                document.getElementById('post-content').innerHTML = `<h2>404</h2><p>Entry not found.</p>`;
+            }
+        }
+
+		window.addEventListener('DOMContentLoaded', initBlog);
+    </script>
+</body>
+</html>
