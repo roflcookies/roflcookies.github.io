@@ -8,13 +8,38 @@ footerTemplate.innerHTML = `
             font-family: "Lucida Console", Monaco, monospace;
             font-size: 12px; letter-spacing: 2px; box-sizing: border-box;
         }
-        .footer-text { font-weight: bold; text-transform: uppercase; margin-bottom: 12px; }
-        #digit-container { display: flex; justify-content: center; gap: 1px; min-height: 24px; margin-bottom: 20px; }
+        
+        .footer-top-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px; /* Tighter margin to keep height down */
+        }
+
+        .center-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer-text { font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
+        
+        #digit-container { display: flex; justify-content: center; gap: 1px; min-height: 24px; }
+        
         .digit {
             width: 18px; height: 24px; background-image: url('assets/numbers.jpg');
             background-repeat: no-repeat; display: inline-block;
             image-rendering: pixelated; filter: grayscale(100%) brightness(1.2);
         }
+        
+        .skele {
+            height: 50px; /* One single source of truth for height */
+            width: auto;
+            image-rendering: pixelated;
+        }
+        .skele-flip { transform: scaleX(-1); }
+
         .screen-frame {
             width: 85%; max-width: 600px; margin: 0 auto;
             background: #050505; border: 2px inset #72644b;
@@ -35,15 +60,21 @@ footerTemplate.innerHTML = `
             font-size: 12px; font-weight: bold; text-transform: uppercase;
             will-change: transform;
         }
-        /* Seamless Loop Keyframes */
         @keyframes ticker-swipe {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-50%, 0, 0); }
         }
     </style>
     <footer>
-        <div class="footer-text">COOKIES ROFL'ED</div>
-        <div id="digit-container"></div>
+        <div class="footer-top-section">
+            <img src="assets/skeledoot.gif" class="skele" alt="">
+            <div class="center-stack">
+                <div class="footer-text">COOKIES ROFL'ED</div>
+                <div id="digit-container"></div>
+            </div>
+            <img src="assets/skeledoot.gif" class="skele skele-flip" alt="">
+        </div>
+
         <div class="screen-frame">
             <div class="ticker-viewport">
                 <div class="ticker-content" id="ticker-text"></div>
@@ -57,8 +88,6 @@ class MainFooter extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(footerTemplate.content.cloneNode(true));
-        
-        // --- CONFIG ---
         this.phrase = " *** ROFLCOOKIES.COM";
         this.pixelsPerSecond = 50;
     }
@@ -71,21 +100,14 @@ class MainFooter extends HTMLElement {
     initTicker() {
         const ticker = this.shadowRoot.getElementById('ticker-text');
         if (!ticker) return;
-
-        // 1. Fill the ticker so it's wider than the screen
         const repeatedText = this.phrase.repeat(10); 
-        ticker.textContent = repeatedText + repeatedText; // Double it for the 50% trick
+        ticker.textContent = repeatedText + repeatedText;
 
         this._timeout = setTimeout(() => {
-            // 2. Calculate duration based on HALF the total content width
             const scrollDistance = ticker.scrollWidth / 2;
             const duration = scrollDistance / this.pixelsPerSecond;
-
-            // 3. Sync to Global Time
             const nowInSeconds = Date.now() / 1000;
             const timeInCurrentLoop = nowInSeconds % duration;
-
-            // 4. Apply Animation
             ticker.style.animation = `ticker-swipe ${duration}s linear infinite`;
             ticker.style.animationDelay = `-${timeInCurrentLoop}s`;
         }, 50);
@@ -101,10 +123,7 @@ class MainFooter extends HTMLElement {
         };
 
         try {
-            // Trigger the increment via the uBlock-safe RPC name
             await fetch(`${SB_URL}/rpc/refresh_stats`, { method: 'POST', headers });
-
-            // Fetch the updated results from the renamed table/view
             const res = await fetch(`${SB_URL}/site_data?id=eq.1&select=hits`, { headers });
             const data = await res.json();
 
@@ -121,9 +140,7 @@ class MainFooter extends HTMLElement {
                     });
                 }
             }
-        } catch (e) {
-            // Silent catch to keep the component clean if requests are blocked
-        }
+        } catch (e) {}
     }
 }
 customElements.define('main-footer', MainFooter);
