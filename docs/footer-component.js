@@ -3,25 +3,17 @@ footerTemplate.innerHTML = `
     <style>
         :host { display: block; margin-top: 20px; }
         footer {
-            background: #000;
-            border: 3px ridge #72644b;
-            padding: 20px 0;
-            text-align: center;
-            color: #72644b;
+            background: #000; border: 3px ridge #72644b; padding: 20px 0;
+            text-align: center; color: #72644b;
             font-family: "Lucida Console", Monaco, monospace;
-            font-size: 12px;
-            letter-spacing: 2px;
-            box-sizing: border-box;
+            font-size: 12px; letter-spacing: 2px; box-sizing: border-box;
         }
         .footer-text { font-weight: bold; text-transform: uppercase; margin-bottom: 12px; }
         #digit-container { display: flex; justify-content: center; gap: 1px; min-height: 24px; margin-bottom: 20px; }
         .digit {
-            width: 18px; height: 24px;
-            background-image: url('assets/numbers.jpg');
-            background-repeat: no-repeat;
-            display: inline-block;
-            image-rendering: pixelated;
-            filter: grayscale(100%) brightness(1.2);
+            width: 18px; height: 24px; background-image: url('assets/numbers.jpg');
+            background-repeat: no-repeat; display: inline-block;
+            image-rendering: pixelated; filter: grayscale(100%) brightness(1.2);
         }
         .screen-frame {
             width: 85%; max-width: 600px; margin: 0 auto;
@@ -37,18 +29,16 @@ footerTemplate.innerHTML = `
         .ticker-viewport { overflow: hidden; white-space: nowrap; display: flex; }
         .ticker-content {
             display: inline-block;
-            padding-left: 100%;
+            white-space: nowrap;
             color: #55FFFF;
             text-shadow: 0 0 6px rgba(85, 255, 255, 0.4);
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
+            font-size: 12px; font-weight: bold; text-transform: uppercase;
             will-change: transform;
-            transform: translateZ(0);
         }
-        @keyframes ticker-move {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
+        /* Seamless Loop Keyframes */
+        @keyframes ticker-swipe {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
         }
     </style>
     <footer>
@@ -56,9 +46,7 @@ footerTemplate.innerHTML = `
         <div id="digit-container"></div>
         <div class="screen-frame">
             <div class="ticker-viewport">
-                <div class="ticker-content" id="ticker-text">
-                    *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM *** ROFLCOOKIES.COM ***
-                </div>
+                <div class="ticker-content" id="ticker-text"></div>
             </div>
         </div>
     </footer>
@@ -69,58 +57,51 @@ class MainFooter extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(footerTemplate.content.cloneNode(true));
-        this._tickerTimeout = null;
+        
+        // --- CONFIG ---
+        this.phrase = " *** ROFLCOOKIES.COM";
+        this.pixelsPerSecond = 50;
     }
 
     connectedCallback() {
         this.fetchDisplayData();
-        this.initGlobalTicker();
+        this.initTicker();
     }
 
-    disconnectedCallback() {
-        if (this._tickerTimeout) clearTimeout(this._tickerTimeout);
-    }
-
-    initGlobalTicker() {
+    initTicker() {
         const ticker = this.shadowRoot.getElementById('ticker-text');
         if (!ticker) return;
 
-        // Configuration: pixels per second
-        const pixelsPerSecond = 50;
-        
-        this._tickerTimeout = setTimeout(() => {
-            const textWidth = ticker.scrollWidth;
-            const viewportWidth = ticker.parentElement.clientWidth;
-            
-            // The total distance the text travels per loop
-            const totalDistance = textWidth + viewportWidth;
-            const duration = totalDistance / pixelsPerSecond;
+        // 1. Fill the ticker so it's wider than the screen
+        // Repeating it enough times to ensure it covers the 600px max-width twice
+        const repeatedText = this.phrase.repeat(10); 
+        ticker.textContent = repeatedText + repeatedText; // Double it for the 50% trick
 
-            // --- THE GLOBAL CLOCK FIX ---
-            // Instead of localStorage, we use the absolute current time in seconds.
-            // This ensures every page calculates the exact same "progress" in the loop.
+        this._timeout = setTimeout(() => {
+            // 2. Calculate duration based on HALF the total content width
+            const scrollDistance = ticker.scrollWidth / 2;
+            const duration = scrollDistance / this.pixelsPerSecond;
+
+            // 3. Sync to Global Time
             const nowInSeconds = Date.now() / 1000;
             const timeInCurrentLoop = nowInSeconds % duration;
 
-            ticker.style.animation = `ticker-move ${duration}s linear infinite`;
+            // 4. Apply Animation
+            ticker.style.animation = `ticker-swipe ${duration}s linear infinite`;
             ticker.style.animationDelay = `-${timeInCurrentLoop}s`;
-        }, 150);
+        }, 50);
     }
 
     async fetchDisplayData() {
         const SB_URL = 'https://yeqgovjxqfrmxlooizgt.supabase.co/rest/v1';
         const SB_KEY = 'sb_publishable_o9JQwug9ZEvWqxt7S4lIpw_CNAsxPXa';
         const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
-
         try {
-            await fetch(`${SB_URL}/rpc/refresh_stats`, { method: 'POST', headers });
             const res = await fetch(`${SB_URL}/site_data?id=eq.1&select=hits`, { headers });
             const data = await res.json();
-            
-            if (data && data[0]) {
+            if (data?.[0]) {
                 const hits = data[0].hits.toString().padStart(7, '0');
                 const container = this.shadowRoot.getElementById('digit-container');
-                
                 if (container) {
                     container.innerHTML = '';
                     hits.split('').forEach(num => {
@@ -134,5 +115,4 @@ class MainFooter extends HTMLElement {
         } catch (e) {}
     }
 }
-
 customElements.define('main-footer', MainFooter);
