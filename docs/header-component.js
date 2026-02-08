@@ -25,7 +25,8 @@ headerTemplate.innerHTML = `
         .banner-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg?auto=compress&cs=tinysrgb&w=800');
+            /* Switched to local hosted asset */
+            background-image: url('assets/banner.jpeg');
             background-position: center 30%;
             background-size: cover;
             opacity: 0.5;
@@ -147,9 +148,7 @@ class MainHeader extends HTMLElement {
     }
 
     initSnow() {
-        // If the script is already there, we're done.
         if (document.querySelector('script[src="snow-engine.js"]')) return;
-
         const script = document.createElement('script');
         script.src = 'snow-engine.js';
         document.head.appendChild(script);
