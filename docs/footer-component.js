@@ -73,7 +73,6 @@ class MainFooter extends HTMLElement {
         if (!ticker) return;
 
         // 1. Fill the ticker so it's wider than the screen
-        // Repeating it enough times to ensure it covers the 600px max-width twice
         const repeatedText = this.phrase.repeat(10); 
         ticker.textContent = repeatedText + repeatedText; // Double it for the 50% trick
 
@@ -95,10 +94,20 @@ class MainFooter extends HTMLElement {
     async fetchDisplayData() {
         const SB_URL = 'https://yeqgovjxqfrmxlooizgt.supabase.co/rest/v1';
         const SB_KEY = 'sb_publishable_o9JQwug9ZEvWqxt7S4lIpw_CNAsxPXa';
-        const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+        const headers = { 
+            'apikey': SB_KEY, 
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json'
+        };
+
         try {
+            // Trigger the increment via the uBlock-safe RPC name
+            await fetch(`${SB_URL}/rpc/refresh_stats`, { method: 'POST', headers });
+
+            // Fetch the updated results from the renamed table/view
             const res = await fetch(`${SB_URL}/site_data?id=eq.1&select=hits`, { headers });
             const data = await res.json();
+
             if (data?.[0]) {
                 const hits = data[0].hits.toString().padStart(7, '0');
                 const container = this.shadowRoot.getElementById('digit-container');
@@ -112,7 +121,9 @@ class MainFooter extends HTMLElement {
                     });
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            // Silent catch to keep the component clean if requests are blocked
+        }
     }
 }
 customElements.define('main-footer', MainFooter);
