@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roflcookies.com - school of juul archive</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        .md-content h1, .md-content h2, .md-content h3 {
+            color: var(--gw-cyan);
+            border-bottom: 1px solid var(--osrs-border);
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        .md-content code {
+            background: #000;
+            color: #0f0;
+            padding: 2px 5px;
+            font-family: monospace;
+        }
+        .md-content blockquote {
+            border-left: 3px solid var(--gw-cyan);
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <div id="render-target" class="md-content">
+                <p>LOADING_DATA...</p>
+            </div>
+
+            <hr style="margin-top: 40px; border: 1px solid var(--osrs-border);">
+            <p><a href="juul.html">< RETURN_TO_SCHOOL</a></p>
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+    <script>
+        async function loadMarkdown() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileName = urlParams.get('file'); // looks for ?file=filename
+            const target = document.getElementById('render-target');
+
+            if (!fileName) {
+                target.innerHTML = "<h2>ERROR: NO_FILE_SPECIFIED</h2>";
+                return;
+            }
+
+            try {
+                // Fetches from your /juul/ folder
+                const response = await fetch(`juul/${fileName}.md`);
+                if (!response.ok) throw new Error("File not found");
+                
+                const rawText = await response.text();
+                // Renders the MD into the page
+                target.innerHTML = marked.parse(rawText);
+                
+                // Update title tag to match file name
+                document.title = `roflcookies.com - ${fileName}.txt`;
+            } catch (err) {
+                target.innerHTML = `<h2>ERROR: FILE_NOT_FOUND</h2><p>Could not locate /juul/${fileName}.md</p>`;
+            }
+        }
+
+        window.onload = loadMarkdown;
+    </script>
+
+</body>
+</html>

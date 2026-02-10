@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roflcookies.com</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+    
+    <style>
+        /* Wiki-style Info Box (Floated Right) */
+        .juul-sidebar {
+            float: right;
+            width: 180px;
+            margin-left: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .juul-box {
+            width: 100%;
+        }
+
+        .profile-img-container {
+            background: #000;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: zoom-in; /* Indicates it can be expanded */
+            transition: border-color 0.2s;
+        }
+
+        .profile-img-container:hover {
+            border-color: var(--gw-cyan);
+        }
+
+        .color-pixel {
+            filter: grayscale(0) !important; 
+            /* Removed image-rendering: pixelated for real photos */
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; 
+            display: block;
+        }
+
+        /* Clearfix to prevent the float from spilling out of the content area */
+        .content-area::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        .guide-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .guide-links li {
+            margin-bottom: 8px;
+            border-left: 2px solid var(--osrs-border);
+            padding-left: 10px;
+        }
+
+        .guide-links a {
+            color: var(--gw-cyan);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .guide-links a:hover {
+            color: var(--gw-white);
+            background: var(--osrs-brown);
+        }
+
+        /* MODAL STYLES */
+        #img-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.92);
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        #modal-content {
+            max-width: 95%;
+            max-height: 95%;
+            border: 4px double var(--osrs-border);
+            box-shadow: 0 0 30px #000;
+            /* Ensure real photo smoothness */
+            image-rendering: auto; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <h2>SCHOOL OF JUUL</h2>
+
+            <div class="juul-sidebar">
+                <div class="juul-box">
+                    <div class="profile-img-container" onclick="openModal('assets/juul.png')">
+                        <img src="assets/juul.png" class="color-pixel" alt="Juul Device">
+                    </div>
+                    <div class="img-caption">DEVICE</div>
+                </div>
+
+                <div class="juul-box">
+                    <div class="profile-img-container" onclick="openModal('assets/juul_pods.png')">
+                        <img src="assets/juul_pods.png" class="color-pixel" alt="Juul Pods">
+                    </div>
+                    <div class="img-caption">PODS</div>
+                </div>
+            </div>
+
+            <h3>THE_JUUL</h3>
+            <p>
+                Best ecig ever made. Developed by Pax Labs and later spun off into its own entity, 
+                the Juul revitilized a dying industry with its use of nicotine salts in a simple POD form factor with fun flavors and a slim device.
+            </p>
+            <p>
+                The once simple and iconic device now takes a back seat to disposable devices that look more like smartphones than cigarettes.
+				This page recognizes that the Juul not only was cool but continues to be.
+            </p>
+
+            <h3>RESOURCE_ARCHIVE</h3>
+			
+			<ul class="guide-links">
+				<li><a href="juul-reader.html?file=refill">Simple Refill Guide</a></li>
+				<li><a href="juul-reader.html?file=coil">Complex Coil Rebuild</a></li>
+				<li><a href="juul-reader.html?file=bible">Juul Bible</a></li>
+			</ul>
+			
+            <p style="clear: both;">> <span class="blink">_</span></p>
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+    <div id="img-modal" onclick="this.style.display='none'">
+        <img id="modal-content" src="" alt="Enlarged View">
+    </div>
+
+    <script>
+        function openModal(src) {
+            const modal = document.getElementById('img-modal');
+            const modalImg = document.getElementById('modal-content');
+            modal.style.display = "flex";
+            modalImg.src = src;
+        }
+    </script>
+
+</body>
+</html>

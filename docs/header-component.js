@@ -109,7 +109,7 @@ headerTemplate.innerHTML = `
             <a href="#" class="tab" id="extras-link">EXTRAS &#9662;</a>
             <div class="dropdown-content">
                 <a href="pachinko.html">PACHINKO</a>
-                <a href="secret.html">HIDDEN_FILE</a>
+                <a href="juul.html">SCHOOL_OF_JUUL</a>
                 <a href="guestbook.html">GUESTBOOK</a>
             </div>
         </div>
@@ -135,7 +135,7 @@ class MainHeader extends HTMLElement {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
             'blog-link': path.includes('blog.html'),
-            'extras-link': path.includes('guestbook.html') || path.includes('pachinko.html') || path.includes('secret.html')
+            'extras-link': path.includes('guestbook.html') || path.includes('pachinko.html') || path.includes('juul.html') || path.includes('juul-reader.html')
         };
 
         Object.keys(links).forEach(id => {
