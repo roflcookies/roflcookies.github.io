@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="header-component.js" type="text/javascript" defer></script>
     <script src="footer-component.js" type="text/javascript" defer></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
@@ -17,18 +16,37 @@
             padding-bottom: 5px;
             margin-top: 25px;
         }
-        .md-content code {
+
+        /* Formatting the images in the MD */
+        .md-content img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border: 3px double var(--osrs-border);
+            margin: 20px 0;
+            filter: grayscale(0) !important;
+            cursor: zoom-in;
             background: #000;
-            color: #0f0;
-            padding: 2px 5px;
-            font-family: monospace;
         }
-        .md-content blockquote {
-            border-left: 3px solid var(--gw-cyan);
-            padding-left: 15px;
-            margin: 15px 0;
-            font-style: italic;
-            color: #aaa;
+
+        /* MODAL STYLES */
+        #img-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.92);
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        #modal-content {
+            max-width: 95%;
+            max-height: 95%;
+            border: 4px double var(--osrs-border);
+            box-shadow: 0 0 30px #000;
         }
     </style>
 </head>
@@ -49,10 +67,14 @@
         <main-footer></main-footer>
     </div>
 
+    <div id="img-modal" onclick="this.style.display='none'">
+        <img id="modal-content" src="" alt="Enlarged View">
+    </div>
+
     <script>
         async function loadMarkdown() {
             const urlParams = new URLSearchParams(window.location.search);
-            const fileName = urlParams.get('file'); // looks for ?file=filename
+            const fileName = urlParams.get('file');
             const target = document.getElementById('render-target');
 
             if (!fileName) {
@@ -61,15 +83,25 @@
             }
 
             try {
-                // Fetches from your /juul/ folder
                 const response = await fetch(`juul/${fileName}.md`);
                 if (!response.ok) throw new Error("File not found");
                 
                 const rawText = await response.text();
-                // Renders the MD into the page
+                
+                // Newest version of Marked just uses marked.parse()
                 target.innerHTML = marked.parse(rawText);
                 
-                // Update title tag to match file name
+                // Add click events to any images found in the MD
+                const images = target.querySelectorAll('img');
+                images.forEach(img => {
+                    img.onclick = function() {
+                        const modal = document.getElementById('img-modal');
+                        const modalImg = document.getElementById('modal-content');
+                        modal.style.display = "flex";
+                        modalImg.src = this.src;
+                    };
+                });
+
                 document.title = `roflcookies.com - ${fileName}.txt`;
             } catch (err) {
                 target.innerHTML = `<h2>ERROR: FILE_NOT_FOUND</h2><p>Could not locate /juul/${fileName}.md</p>`;

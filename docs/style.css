@@ -158,3 +158,14 @@ iframe {
     border: none;
     background: transparent;
 }
+
+.md-content img {
+        display: block;
+        max-width: 300px; /* Limits size so it doesn't eat the page */
+        height: auto;
+        border: 3px double var(--osrs-border);
+        margin: 20px 0;
+        filter: grayscale(0) !important; /* Force Color */
+        image-rendering: auto; /* Keeps photo smooth */
+        background: #000;
+}
