@@ -1,5 +1,6 @@
 /**
- * FIRE_ENGINE v4.1 - Mobile Touch Support & Scaled Graphics
+ * FIRE_ENGINE v4.3 - Optimized Build
+ * Strategy: Prerendered logs to reduce per-frame CPU load
  */
 const FIRE_CONFIG = {
     burnTimePerLog: 15000, 
@@ -17,10 +18,15 @@ class FireEngine {
 
         this.ctx = this.canvas.getContext('2d');
         
+        // --- OPTIMIZATION: Off-screen canvas for logs ---
+        this.logCanvas = document.createElement('canvas');
+        this.logCtx = this.logCanvas.getContext('2d');
+        this.needsLogRedraw = true;
+
         this.logs = []; 
         this.particles = [];
         this.lastTime = performance.now();
-        this.isInteracting = false; // Renamed from isClicking
+        this.isInteracting = false;
         this.mouseX = 0;
         this.mouseY = 0;
         this.ignitionProgress = 0; 
@@ -29,8 +35,8 @@ class FireEngine {
         this.setupPile();
         this.setupCanvas();
         this.setupGlobalDrag();
-        this.setupControls(); // Handles Mouse
-        this.setupTouch();    // Handles Mobile
+        this.setupControls();
+        this.setupTouch();
         
         requestAnimationFrame((t) => this.render(t));
     }
@@ -42,7 +48,7 @@ class FireEngine {
             .pixel-log { position: absolute; width: 60px; height: 20px; background-color: #5d3a24; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 4px); border: 2px solid #2a180b; box-shadow: 2px 2px 0 #000; }
             .pixel-log-pile { width: 140px; height: 80px; position: relative; pointer-events: none; }
             #drag-ghost { position: fixed; z-index: 10000; display: none; pointer-events: none; }
-            canvas { touch-action: none; } /* Prevents page bounce on mobile while sparking */
+            canvas { touch-action: none; }
         `;
         document.head.appendChild(style);
         
@@ -66,26 +72,22 @@ class FireEngine {
         this.pileContainer.appendChild(pile);
     }
 
-    // MOUSE CONTROLS
     setupControls() {
         this.canvas.addEventListener('mousedown', (e) => { this.isInteracting = true; this.updatePos(e); });
         window.addEventListener('mouseup', () => { this.isInteracting = false; });
         this.canvas.addEventListener('mousemove', (e) => { this.updatePos(e); });
     }
 
-    // TOUCH CONTROLS
     setupTouch() {
         this.canvas.addEventListener('touchstart', (e) => {
             this.isInteracting = true;
             this.updatePos(e.touches[0]);
-            e.preventDefault(); // Stop scrolling
+            e.preventDefault();
         }, { passive: false });
-
         this.canvas.addEventListener('touchmove', (e) => {
             this.updatePos(e.touches[0]);
             e.preventDefault();
         }, { passive: false });
-
         window.addEventListener('touchend', () => { this.isInteracting = false; });
     }
 
@@ -97,41 +99,29 @@ class FireEngine {
 
     setupGlobalDrag() {
         let isDragging = false;
-        
         const startDrag = (e) => {
             const pos = e.touches ? e.touches[0] : e;
-            isDragging = true; 
-            this.ghost.style.display = 'block';
+            isDragging = true; this.ghost.style.display = 'block';
             this.updateGhostPos(pos);
             if(e.touches) e.preventDefault();
         };
-
         const moveDrag = (e) => {
             if(!isDragging) return;
             const pos = e.touches ? e.touches[0] : e;
             this.updateGhostPos(pos);
         };
-
         const endDrag = (e) => {
             if(!isDragging) return;
-            isDragging = false; 
-            this.ghost.style.display = 'none';
-            
+            isDragging = false; this.ghost.style.display = 'none';
             const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
             const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-            
             const rect = this.canvas.getBoundingClientRect();
-            if (endX >= rect.left && endX <= rect.right && endY >= rect.top && endY <= rect.bottom) {
-                this.addLog();
-            }
+            if (endX >= rect.left && endX <= rect.right && endY >= rect.top && endY <= rect.bottom) this.addLog();
         };
-
         this.pileContainer.addEventListener('mousedown', startDrag);
         this.pileContainer.addEventListener('touchstart', startDrag, { passive: false });
-
         window.addEventListener('mousemove', moveDrag);
         window.addEventListener('touchmove', moveDrag, { passive: false });
-
         window.addEventListener('mouseup', endDrag);
         window.addEventListener('touchend', endDrag);
     }
@@ -150,64 +140,80 @@ class FireEngine {
                 yPos: targetY + 40, 
                 targetY: targetY
             });
+            this.needsLogRedraw = true; // Trigger redraw
         }
     }
 
+    // --- OPTIMIZED DRAW LOGS ---
     drawLogs(now) {
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height - 15;
         const isBurning = this.logs.length > 0 && this.logs[0].expiry !== null;
 
-        this.logs.forEach((log, i) => {
-            if (log.yPos > log.targetY) log.yPos -= 1;
-            if (log.yPos < log.targetY) log.yPos = log.targetY;
-
-            this.ctx.save();
-            this.ctx.translate(cx, cy - log.yPos);
-            this.ctx.rotate(log.angle);
-
-            const logW = 100;
-            const logH = 24;
-            const pSize = 3; 
-
-            let logHeat = 0;
-            if (isBurning) {
-                if (i === 0) {
-                    logHeat = Math.max(0.1, (log.expiry - now) / FIRE_CONFIG.burnTimePerLog);
-                } else {
-                    logHeat = Math.max(0, 0.8 - (i * 0.2)); 
-                }
+        // If a log is moving or burning, we must redraw the cache
+        let isMoving = false;
+        this.logs.forEach(log => {
+            if (log.yPos !== log.targetY) {
+                if (log.yPos > log.targetY) log.yPos -= 1;
+                if (log.yPos < log.targetY) log.yPos = log.targetY;
+                isMoving = true;
             }
-
-            if (logHeat > 0) {
-                for (let x = -logW/2; x < logW/2; x += pSize) {
-                    for (let y = -logH/2; y < logH/2; y += pSize) {
-                        const rand = Math.random();
-                        const ashThreshold = (i === 0) ? (1.0 - logHeat) : (1.0 - logHeat) * 0.3;
-
-                        if (rand < ashThreshold) {
-                            const gray = 30 + Math.random() * 20;
-                            this.ctx.fillStyle = `rgb(${gray},${gray},${gray})`;
-                        } else if (rand < ashThreshold + (logHeat * 0.4)) {
-                            const r = 180 + Math.random() * 75;
-                            const g = 40 + Math.random() * 50;
-                            this.ctx.fillStyle = `rgb(${r},${g},20)`;
-                        } else {
-                            const r = 93 + (logHeat * 60);
-                            const g = 58 + (logHeat * 20);
-                            this.ctx.fillStyle = `rgb(${r},${g},36)`;
-                        }
-                        this.ctx.fillRect(x, y, pSize, pSize);
-                    }
-                }
-            } else {
-                this.ctx.fillStyle = `rgb(93, 58, 36)`;
-                this.ctx.fillRect(-logW/2, -logH/2, logW, logH);
-                this.ctx.fillStyle = 'rgba(0,0,0,0.15)';
-                this.ctx.fillRect(-logW/2, -logH/2, logW, 6);
-            }
-            this.ctx.restore();
         });
+
+        // We redraw the log pixels to the cache if needed
+        // Note: when burning, we redraw every frame to show the heat "shimmer"
+        if (this.needsLogRedraw || isMoving || isBurning) {
+            this.logCanvas.width = this.canvas.width;
+            this.logCanvas.height = this.canvas.height;
+            
+            this.logs.forEach((log, i) => {
+                this.logCtx.save();
+                this.logCtx.translate(cx, cy - log.yPos);
+                this.logCtx.rotate(log.angle);
+
+                const logW = 100;
+                const logH = 24;
+                const pSize = 3; 
+
+                let logHeat = 0;
+                if (isBurning) {
+                    if (i === 0) logHeat = Math.max(0.1, (log.expiry - now) / FIRE_CONFIG.burnTimePerLog);
+                    else logHeat = Math.max(0, 0.8 - (i * 0.2)); 
+                }
+
+                if (logHeat > 0) {
+                    for (let x = -logW/2; x < logW/2; x += pSize) {
+                        for (let y = -logH/2; y < logH/2; y += pSize) {
+                            const rand = Math.random();
+                            const ashT = (i === 0) ? (1.0 - logHeat) : (1.0 - logHeat) * 0.3;
+                            if (rand < ashT) {
+                                const gray = 30 + Math.random() * 20;
+                                this.logCtx.fillStyle = `rgb(${gray},${gray},${gray})`;
+                            } else if (rand < ashT + (logHeat * 0.4)) {
+                                const r = 180 + Math.random() * 75;
+                                const g = 40 + Math.random() * 50;
+                                this.logCtx.fillStyle = `rgb(${r},${g},20)`;
+                            } else {
+                                const r = 93 + (logHeat * 60);
+                                const g = 58 + (logHeat * 20);
+                                this.logCtx.fillStyle = `rgb(${r},${g},36)`;
+                            }
+                            this.logCtx.fillRect(x, y, pSize, pSize);
+                        }
+                    }
+                } else {
+                    this.logCtx.fillStyle = `rgb(93, 58, 36)`;
+                    this.logCtx.fillRect(-logW/2, -logH/2, logW, logH);
+                    this.logCtx.fillStyle = 'rgba(0,0,0,0.15)';
+                    this.logCtx.fillRect(-logW/2, -logH/2, logW, 6);
+                }
+                this.logCtx.restore();
+            });
+            this.needsLogRedraw = false;
+        }
+
+        // Fast draw the cached log image to the main canvas
+        this.ctx.drawImage(this.logCanvas, 0, 0);
     }
 
     spawnParticle(x, y) {
@@ -225,6 +231,7 @@ class FireEngine {
         const res = () => {
             this.canvas.width = this.canvas.clientWidth;
             this.canvas.height = this.canvas.clientHeight;
+            this.needsLogRedraw = true;
         };
         window.addEventListener('resize', res);
         res();
@@ -238,13 +245,12 @@ class FireEngine {
         if (this.logs.length > 0 && this.logs[0].expiry !== null) {
             if (this.logs[0].expiry < now) {
                 this.logs.shift();
-                this.logs.forEach((log, idx) => {
-                    log.targetY = idx * 12;
-                });
+                this.logs.forEach((log, idx) => { log.targetY = idx * 12; });
                 if (this.logs.length > 0) {
                     this.logs[0].expiry = now + FIRE_CONFIG.burnTimePerLog;
                     this.logs[0].angle = 0;
                 }
+                this.needsLogRedraw = true;
             }
         }
 
@@ -258,6 +264,7 @@ class FireEngine {
                     if (this.ignitionProgress > 1000) { 
                         this.logs[0].expiry = now + FIRE_CONFIG.burnTimePerLog;
                         this.ignitionProgress = 0;
+                        this.needsLogRedraw = true;
                     }
                 }
             }
@@ -265,11 +272,10 @@ class FireEngine {
             this.ignitionProgress = Math.max(0, this.ignitionProgress - dt);
         }
 
-        const isBurning = this.logs.length > 0 && this.logs[0].expiry !== null;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawLogs(now);
 
-        if (isBurning) {
+        if (this.logs.length > 0 && this.logs[0].expiry !== null) {
             for (let i = 0; i < FIRE_CONFIG.spawnRate; i++) {
                 const lx = (this.canvas.width / 2) + (Math.random() - 0.5) * 60;
                 const ly = this.canvas.height - 30;
@@ -277,17 +283,22 @@ class FireEngine {
             }
         }
 
+        // Render Particles (Optimized: Rounding once)
+        this.ctx.beginPath();
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.x += p.vx; p.y += p.vy; p.life--;
             if (p.life <= 0) { this.particles.splice(i, 1); continue; }
+            
             const lifePct = p.life / p.maxLife;
             const colorIdx = lifePct < 0.2 ? 4 : lifePct < 0.4 ? 3 : lifePct < 0.6 ? 2 : lifePct < 0.8 ? 1 : 0;
+            
             this.ctx.fillStyle = FIRE_CONFIG.colors[colorIdx];
-            const px = Math.round(p.x / FIRE_CONFIG.pixelSize) * FIRE_CONFIG.pixelSize;
-            const py = Math.round(p.y / FIRE_CONFIG.pixelSize) * FIRE_CONFIG.pixelSize;
+            const px = (p.x / FIRE_CONFIG.pixelSize | 0) * FIRE_CONFIG.pixelSize;
+            const py = (p.y / FIRE_CONFIG.pixelSize | 0) * FIRE_CONFIG.pixelSize;
             this.ctx.fillRect(px, py, FIRE_CONFIG.pixelSize, FIRE_CONFIG.pixelSize);
         }
+        
         requestAnimationFrame((t) => this.render(t));
     }
 }

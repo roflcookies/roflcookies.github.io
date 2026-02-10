@@ -41,8 +41,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Pass the Canvas ID and the Sidebar ID
-            new FireEngine('fire-canvas', 'log-pile-target');
+            /** * Initialize the FireEngine and save it to window.pixelFire.
+             * This allows the SnowEngine (loaded by the header) to detect 
+             * the fire and trigger the melting/steam effects.
+             */
+            const fire = new FireEngine('fire-canvas', 'log-pile-target');
+            window.pixelFire = fire;
         });
     </script>
 </body>
