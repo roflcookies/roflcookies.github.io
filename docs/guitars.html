@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roflcookies.com</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+    <style>
+        /* Layout for the Guitar entries */
+        .guitar-entry {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px double var(--osrs-border);
+        }
+
+        .guitar-entry:last-child { border-bottom: none; }
+
+        .guitar-aside { flex: 0 0 220px; text-align: center; }
+
+        .guitar-aside img {
+            filter: none !important;
+            border: none !important; 
+            max-height: 280px; 
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .guitar-specs { flex: 1; }
+
+        .specs-box {
+            background: #1a1a1a;
+            border: 1px solid var(--osrs-border);
+            margin-top: 15px;
+            width: 100%;
+            font-size: 11px;
+        }
+
+        .specs-box table { width: 100%; border-collapse: collapse; }
+
+        .specs-box th {
+            background: var(--osrs-brown);
+            color: var(--osrs-border);
+            text-align: left;
+            padding: 4px 6px;
+            width: 80px;
+            border-bottom: 1px solid #111;
+            text-transform: uppercase;
+        }
+
+        .specs-box td {
+            padding: 4px 6px;
+            color: var(--gw-white);
+            border-bottom: 1px solid #111;
+            text-align: right;
+        }
+
+        .guitar-entry h3 {
+            color: var(--gw-cyan);
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+
+        /* --- MODAL POPUP STYLES --- */
+        #img-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        #modal-content {
+            background-color: var(--osrs-brown);
+            border: 4px double var(--osrs-border);
+            padding: 10px;
+            box-shadow: 0 0 20px #000;
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        #modal-img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            border: 2px solid #000;
+        }
+
+        .close-hint {
+            color: var(--osrs-border);
+            font-size: 10px;
+            text-align: center;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            .guitar-entry { flex-direction: column; align-items: center; }
+            .guitar-aside { flex: 0 0 auto; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="img-modal" onclick="this.style.display='none'">
+        <div id="modal-content">
+            <img id="modal-img" src="" alt="Full size view">
+            <div class="close-hint">Click anywhere to close</div>
+        </div>
+    </div>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <h2>GUITAR CORNER</h2>
+            <p>My guitars (unfinished)</p>
+
+            <div class="guitar-entry">
+                <div class="guitar-aside">
+                    <a href="assets/gl1.png" class="zoom-link">
+                        <div class="profile-img-container">
+                            <img src="assets/gl1.png" class="pixel-img" alt="Guitar 1">
+                        </div>
+                    </a>
+                    <div class="img-caption">"The Gute"</div>
+                    <div class="specs-box">
+                        <table>
+                            <tr><th>Scale</th><td>17"</td></tr>
+                            <tr><th>TUNING</th><td>E-Standard</td></tr>
+                            <tr><th>STRINGS</th><td>D'Addario XTC46ff</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="guitar-specs">
+                    <h3>Yamaha GL1</h3>
+                    <p>My main guitar. Easy and fun to play. Actual photo of my guitar coming soon</p>
+                </div>
+            </div>
+
+            <div class="guitar-entry">
+                <div class="guitar-aside">
+                    <a href="assets/global4001.png" class="zoom-link">
+                        <div class="profile-img-container">
+                            <img src="assets/global4001.png" class="pixel-img" alt="Guitar 2">
+                        </div>
+                    </a>
+                    <div class="img-caption">"Global"</div>
+                    <div class="specs-box">
+                        <table>
+                            <tr><th>Scale</th><td>unknown</td></tr>
+                            <tr><th>TUNING</th><td>E-Standard</td></tr>
+                            <tr><th>STRINGS</th><td>La Bella</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="guitar-specs">
+                    <h3>Global 4001</h3>
+                    <p>Super old (60s-80s) parlor guitar made in korea by Global. I got it for free because the bridge was falling off. I used the old 'free steam neck reset' trick to remove some of the belly and straightend the bridge out by pouring boiling water over it and clamping it for several days. It was sold originally with steel strings but I have put on La Bella nylons to keep the tension down. Its a bit quiet but plays nice. The usage of steel strings have worn deep grooves into the fretboard over the decades of service. The neck has various chips and I had to make a tuning button-knob out of sawdust and glue as the G tuner was missing the knob.</p>
+                </div>
+            </div>
+
+            <p>> <span class="blink">_</span></p>
+        </div>
+        <main-footer></main-footer>
+    </div>
+
+    <script>
+        // Select all links with the zoom-link class
+        const links = document.querySelectorAll('.zoom-link');
+        const modal = document.getElementById('img-modal');
+        const modalImg = document.getElementById('modal-img');
+
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // Stop it from opening a new tab
+                modalImg.src = this.href; // Get the image path from the link
+                modal.style.display = 'flex'; // Show the popup
+            });
+        });
+    </script>
+</body>
+</html>

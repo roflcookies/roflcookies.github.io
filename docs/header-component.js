@@ -111,7 +111,8 @@ headerTemplate.innerHTML = `
         <a href="index.html" class="tab" id="home-link">HOME</a>
         <a href="about.html" class="tab" id="about-link">THE_FOOL</a>
         <a href="blog.html" class="tab" id="blog-link">BLOG</a>
-        
+        <a href="guitars.html" class="tab" id="guitar-link">GUITARS</a>
+		
         <div class="dropdown">
             <a href="#" class="tab" id="extras-link">EXTRAS &#9662;</a>
             <div class="dropdown-content">
@@ -144,6 +145,7 @@ class MainHeader extends HTMLElement {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
             'blog-link': path.includes('blog.html'),
+			'guitar-link': path.includes('guitars.html'),
             'extras-link': path.includes('guestbook.html') || path.includes('pachinko.html') || path.includes('juul.html') || path.includes('juul-reader.html') || path.includes('fire.html')
         };
 
