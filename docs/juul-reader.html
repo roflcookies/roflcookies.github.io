@@ -7,46 +7,45 @@
     <link rel="stylesheet" href="style.css">
     <script src="header-component.js" type="text/javascript" defer></script>
     <script src="footer-component.js" type="text/javascript" defer></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         .md-content h1, .md-content h2, .md-content h3 {
             color: var(--gw-cyan);
-            border-bottom: 1px solid var(--osrs-border);
-            padding-bottom: 5px;
+            border-bottom: 1px dashed var(--osrs-border);
+            padding-bottom: 10px;
             margin-top: 25px;
         }
 
-        /* Formatting the images in the MD */
         .md-content img {
             display: block;
             max-width: 100%;
             height: auto;
-            border: 3px double var(--osrs-border);
-            margin: 20px 0;
+            border: 4px double var(--osrs-border);
+            margin: 25px 0;
             filter: grayscale(0) !important;
-            cursor: zoom-in;
             background: #000;
+            cursor: zoom-in;
         }
 
-        /* MODAL STYLES */
+        /* Modal / Lightbox */
         #img-modal {
             display: none;
             position: fixed;
             z-index: 9999;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.92);
+            background-color: rgba(0,0,0,0.9);
             align-items: center;
             justify-content: center;
             cursor: zoom-out;
         }
 
         #modal-content {
-            max-width: 95%;
-            max-height: 95%;
+            max-width: 90%;
+            max-height: 90%;
             border: 4px double var(--osrs-border);
-            box-shadow: 0 0 30px #000;
         }
     </style>
 </head>
@@ -57,11 +56,11 @@
 
         <div class="content-area">
             <div id="render-target" class="md-content">
-                <p>LOADING_DATA...</p>
+                <p class="blink">FETCHING_REMOTE_DATA...</p>
             </div>
 
             <hr style="margin-top: 40px; border: 1px solid var(--osrs-border);">
-            <p><a href="juul.html">< RETURN_TO_SCHOOL</a></p>
+            <p><a href="juul.html" class="btn-retro">< RETURN_TO_SCHOOL</a></p>
         </div>
 
         <main-footer></main-footer>
@@ -78,20 +77,26 @@
             const target = document.getElementById('render-target');
 
             if (!fileName) {
-                target.innerHTML = "<h2>ERROR: NO_FILE_SPECIFIED</h2>";
+                target.innerHTML = "<h2 class='error-text'>ERROR: NO_FILE_SPECIFIED</h2>";
                 return;
             }
 
+            // Pathing: 'juul/' looks inside the folder in the same root
+            const filePath = `juul/${fileName}.md`;
+
             try {
-                const response = await fetch(`juul/${fileName}.md`);
-                if (!response.ok) throw new Error("File not found");
+                const response = await fetch(filePath);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP_STATUS: ${response.status}`);
+                }
                 
                 const rawText = await response.text();
                 
-                // Newest version of Marked just uses marked.parse()
-                target.innerHTML = marked.parse(rawText);
+                // Parse the text. Using window.marked.parse to ensure library is found
+                target.innerHTML = window.marked.parse(rawText);
                 
-                // Add click events to any images found in the MD
+                // Modal Logic for images
                 const images = target.querySelectorAll('img');
                 images.forEach(img => {
                     img.onclick = function() {
@@ -102,14 +107,20 @@
                     };
                 });
 
-                document.title = `roflcookies.com - ${fileName}.txt`;
+                document.title = `roflcookies.com - ${fileName}.md`;
+
             } catch (err) {
-                target.innerHTML = `<h2>ERROR: FILE_NOT_FOUND</h2><p>Could not locate /juul/${fileName}.md</p>`;
+                target.innerHTML = `
+                    <h2 class="error-text">ERROR: DATA_FETCH_FAILED</h2>
+                    <p>Attempted to load: <b>${filePath}</b></p>
+                    <p>System message: ${err.message}</p>
+                    <p>Ensure the 'juul' folder and '${fileName}.md' are uploaded to the root.</p>
+                `;
             }
         }
 
+        // Wait for Marked to load before running
         window.onload = loadMarkdown;
     </script>
-
 </body>
 </html>
