@@ -43,23 +43,12 @@ class StarshipBackground extends HTMLElement {
     pickTarget() {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        
-        // BIAS: 80% chance to target the visible side areas
         const sideBias = Math.random() < 0.8;
-        let tx;
-        
-        if (sideBias) {
-            // Target the left 30% or right 30% of the screen
-            tx = Math.random() < 0.5 ? Math.random() * (w * 0.3) : w - (Math.random() * (w * 0.3));
-        } else {
-            // 20% chance to fly right through the middle
-            tx = Math.random() * w;
-        }
+        let tx = sideBias ? (Math.random() < 0.5 ? Math.random() * (w * 0.3) : w - (Math.random() * (w * 0.3))) : Math.random() * w;
 
         this.target = {
             x: tx,
             y: Math.random() * h,
-            // Vary depth: -300 is close/large, -2000 is far/small
             z: -300 - (Math.random() * 1700)
         };
         this.watchdog = 0;
@@ -75,20 +64,21 @@ class StarshipBackground extends HTMLElement {
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
 
         this.watchdog += dt;
-        // If it takes longer than 7 seconds or reaches target, pick new one
         if (dist < 120 || this.watchdog > 420) {
             this.pickTarget();
         }
 
+        // 1. Calculate Target Angles
         let tYaw = Math.atan2(dx, dz) * (180 / Math.PI);
         let tPitch = Math.asin(-dy / dist) * (180 / Math.PI);
-        tPitch = Math.max(-40, Math.min(40, tPitch));
-
+        
+        // 2. Smooth Rotation
         let diff = ((tYaw - this.state.yaw + 180) % 360 + 360) % 360 - 180;
-        this.state.yaw += diff * 0.06 * dt; // Slightly faster turning
+        this.state.yaw += diff * 0.06 * dt;
         this.state.pitch += (tPitch - this.state.pitch) * 0.06 * dt;
 
-        const speed = 6.0 * dt; // Increased speed for better visibility
+        // 3. Movement Physics
+        const speed = 6.0 * dt;
         const rY = this.state.yaw * (Math.PI / 180);
         const rP = this.state.pitch * (Math.PI / 180);
         
@@ -96,17 +86,34 @@ class StarshipBackground extends HTMLElement {
         this.state.y -= Math.sin(rP) * speed;
         this.state.z += Math.cos(rY) * Math.cos(rP) * speed;
 
-        let row = Math.round((this.state.pitch + 90) / 30);
+        // --- SPRITE LOGIC BASED ON WRITE-UP ---
+        
+        // Phi (Row): Vertical look angle (0 to 180 degrees)
+        // We offset pitch by 90 because pitch 0 is the center row (horizon)
+        let phi = this.state.pitch + 90; 
+        let row = Math.round((phi / 180) * 6);
         row = Math.max(0, Math.min(6, row));
-        let normY = (this.state.yaw % 360 + 360) % 360;
+
+        // Theta (Column): Horizontal look angle
+        // The sheet covers 180 degrees. If yaw is 180-360, we mirror the 0-180 view.
+        let normYaw = (this.state.yaw % 360 + 360) % 360;
         let col, mirror = false;
-        if (normY <= 180) { col = Math.round(normY / 30); } 
-        else { col = Math.round((360 - normY) / 30); mirror = true; }
+
+        if (normYaw <= 180) {
+            col = Math.round((normYaw / 180) * 6);
+        } else {
+            col = Math.round(((360 - normYaw) / 180) * 6);
+            mirror = true;
+        }
+
+        // Write-up check: Row 0 and Row 6 are single-sprite poles.
         if (row === 0 || row === 6) col = 0;
 
+        // Update Sprite
         this.sprite.style.backgroundPosition = `-${col * this.TILE}px -${row * this.TILE}px`;
         this.sprite.style.transform = mirror ? 'scaleX(-1)' : 'scaleX(1)';
 
+        // Update 3D Perspective
         let scale = 800 / (800 + Math.abs(this.state.z));
         this.ship.style.left = this.state.x + 'px';
         this.ship.style.top = this.state.y + 'px';

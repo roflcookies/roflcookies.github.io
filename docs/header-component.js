@@ -10,9 +10,10 @@ headerTemplate.innerHTML = `
             --jester-red: #8b0000;
             --winter-steel: #465362;
             
-            /* Ensure the header itself is ALWAYS on top of the ship */
+            /* Keep the header above the flying ship */
             position: relative;
             z-index: 100; 
+            display: block;
         }
 
         .banner-link { text-decoration: none; display: block; cursor: pointer; }
@@ -57,7 +58,7 @@ headerTemplate.innerHTML = `
             padding: 5px 15px 0 15px;
             border-bottom: 2px solid #000;
             position: relative;
-            z-index: 101; /* Keep nav above everything */
+            z-index: 101;
             font-family: "Lucida Console", Monaco, monospace;
         }
 
@@ -112,13 +113,13 @@ headerTemplate.innerHTML = `
         <a href="about.html" class="tab" id="about-link">THE_FOOL</a>
         <a href="blog.html" class="tab" id="blog-link">BLOG</a>
         <a href="guitars.html" class="tab" id="guitar-link">GUITARS</a>
-		
+        
         <div class="dropdown">
             <a href="#" class="tab" id="extras-link">EXTRAS &#9662;</a>
             <div class="dropdown-content">
                 <a href="pachinko.html">PACHINKO</a>
-				<a href="fire.html">CAMPFIRE</a>
-                <a href="juul.html">SCHOOL_OF_JUUL</a>
+                <a href="fire.html">CAMPFIRE</a>
+                <a href="juul.html">SCHOOL_OF_juul</a>
                 <a href="guestbook.html">GUESTBOOK</a>
             </div>
         </div>
@@ -135,7 +136,7 @@ class MainHeader extends HTMLElement {
     connectedCallback() {
         this.updateActiveTab();
         this.initSnow();
-        this.initStarship(); // Starts the ship flying!
+        this.initStarship();
     }
 
     updateActiveTab() {
@@ -145,8 +146,12 @@ class MainHeader extends HTMLElement {
             'home-link': path === '/' || path.includes('index.html'),
             'about-link': path.includes('about.html'),
             'blog-link': path.includes('blog.html'),
-			'guitar-link': path.includes('guitars.html'),
-            'extras-link': path.includes('guestbook.html') || path.includes('pachinko.html') || path.includes('juul.html') || path.includes('juul-reader.html') || path.includes('fire.html')
+            'guitar-link': path.includes('guitars.html'),
+            'extras-link': path.includes('guestbook.html') || 
+                           path.includes('pachinko.html') || 
+                           path.includes('juul.html') || 
+                           path.includes('juul-reader.html') || 
+                           path.includes('fire.html')
         };
 
         Object.keys(links).forEach(id => {
@@ -165,25 +170,36 @@ class MainHeader extends HTMLElement {
         document.head.appendChild(script);
     }
 
-	initStarship() {
+    initStarship() {
+        // Only load the script if it's not already there
         if (!document.querySelector('script[src="starship-component.js"]')) {
             const script = document.createElement('script');
             script.src = 'starship-component.js';
             document.head.appendChild(script);
             
             script.onload = () => {
-                if (!document.querySelector('starship-background')) {
-                    const ship = document.createElement('starship-background');
-                    // Force the ship to the background level
-                    ship.style.position = "fixed";
-                    ship.style.top = "0";
-                    ship.style.left = "0";
-                    ship.style.width = "100%";
-                    ship.style.height = "100%";
-                    ship.style.zIndex = "-1"; // Move it BEHIND the body's normal layer
-                    document.body.prepend(ship);
-                }
+                this.injectStarshipElement();
             };
+        } else {
+            // Script already exists, just make sure the element does too
+            this.injectStarshipElement();
+        }
+    }
+
+    injectStarshipElement() {
+        if (!document.querySelector('starship-background')) {
+            const ship = document.createElement('starship-background');
+            // Ensure ship stays in the background regardless of its internal CSS
+            Object.assign(ship.style, {
+                position: "fixed",
+                top: "0",
+                left: "0",
+                width: "100%",
+                height: "100%",
+                zIndex: "-1",
+                pointerEvents: "none"
+            });
+            document.body.prepend(ship);
         }
     }
 }
