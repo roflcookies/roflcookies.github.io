@@ -1,11 +1,11 @@
 /**
- * FIRE_ENGINE v4.0 - Scaled Logs & Voluminous Fire
+ * FIRE_ENGINE v4.1 - Mobile Touch Support & Scaled Graphics
  */
 const FIRE_CONFIG = {
     burnTimePerLog: 15000, 
-    particleLife: 45, // Slightly longer life for taller flames
-    spawnRate: 8,    // More particles for a thicker fire
-    pixelSize: 6,    // Larger "zoom" on fire pixels
+    particleLife: 45,
+    spawnRate: 8,
+    pixelSize: 6,
     colors: ['#FFFFFF', '#FFFF55', '#FFAA00', '#FF5555', '#222222']
 };
 
@@ -20,7 +20,7 @@ class FireEngine {
         this.logs = []; 
         this.particles = [];
         this.lastTime = performance.now();
-        this.isClicking = false;
+        this.isInteracting = false; // Renamed from isClicking
         this.mouseX = 0;
         this.mouseY = 0;
         this.ignitionProgress = 0; 
@@ -29,7 +29,8 @@ class FireEngine {
         this.setupPile();
         this.setupCanvas();
         this.setupGlobalDrag();
-        this.setupControls();
+        this.setupControls(); // Handles Mouse
+        this.setupTouch();    // Handles Mobile
         
         requestAnimationFrame((t) => this.render(t));
     }
@@ -37,10 +38,11 @@ class FireEngine {
     injectStyles() {
         const style = document.createElement('style');
         style.innerHTML = `
-            #log-pile-target { width: 180px; height: 120px; align-self: flex-end; display: flex; align-items: flex-end; justify-content: center; cursor: grab; }
+            #log-pile-target { width: 180px; height: 120px; align-self: flex-end; display: flex; align-items: flex-end; justify-content: center; cursor: grab; touch-action: none; }
             .pixel-log { position: absolute; width: 60px; height: 20px; background-color: #5d3a24; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 4px); border: 2px solid #2a180b; box-shadow: 2px 2px 0 #000; }
             .pixel-log-pile { width: 140px; height: 80px; position: relative; pointer-events: none; }
             #drag-ghost { position: fixed; z-index: 10000; display: none; pointer-events: none; }
+            canvas { touch-action: none; } /* Prevents page bounce on mobile while sparking */
         `;
         document.head.appendChild(style);
         
@@ -64,13 +66,30 @@ class FireEngine {
         this.pileContainer.appendChild(pile);
     }
 
+    // MOUSE CONTROLS
     setupControls() {
-        this.canvas.addEventListener('mousedown', (e) => { this.isClicking = true; this.updateMouse(e); });
-        window.addEventListener('mouseup', () => { this.isClicking = false; });
-        this.canvas.addEventListener('mousemove', (e) => { this.updateMouse(e); });
+        this.canvas.addEventListener('mousedown', (e) => { this.isInteracting = true; this.updatePos(e); });
+        window.addEventListener('mouseup', () => { this.isInteracting = false; });
+        this.canvas.addEventListener('mousemove', (e) => { this.updatePos(e); });
     }
 
-    updateMouse(e) {
+    // TOUCH CONTROLS
+    setupTouch() {
+        this.canvas.addEventListener('touchstart', (e) => {
+            this.isInteracting = true;
+            this.updatePos(e.touches[0]);
+            e.preventDefault(); // Stop scrolling
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            this.updatePos(e.touches[0]);
+            e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => { this.isInteracting = false; });
+    }
+
+    updatePos(e) {
         const rect = this.canvas.getBoundingClientRect();
         this.mouseX = e.clientX - rect.left;
         this.mouseY = e.clientY - rect.top;
@@ -78,29 +97,53 @@ class FireEngine {
 
     setupGlobalDrag() {
         let isDragging = false;
-        this.pileContainer.addEventListener('mousedown', (e) => {
-            isDragging = true; this.ghost.style.display = 'block';
-            this.updateGhostPos(e); e.preventDefault();
-        });
-        window.addEventListener('mousemove', (e) => { if(isDragging) this.updateGhostPos(e); });
-        window.addEventListener('mouseup', (e) => {
+        
+        const startDrag = (e) => {
+            const pos = e.touches ? e.touches[0] : e;
+            isDragging = true; 
+            this.ghost.style.display = 'block';
+            this.updateGhostPos(pos);
+            if(e.touches) e.preventDefault();
+        };
+
+        const moveDrag = (e) => {
             if(!isDragging) return;
-            isDragging = false; this.ghost.style.display = 'none';
+            const pos = e.touches ? e.touches[0] : e;
+            this.updateGhostPos(pos);
+        };
+
+        const endDrag = (e) => {
+            if(!isDragging) return;
+            isDragging = false; 
+            this.ghost.style.display = 'none';
+            
+            const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            
             const rect = this.canvas.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+            if (endX >= rect.left && endX <= rect.right && endY >= rect.top && endY <= rect.bottom) {
                 this.addLog();
             }
-        });
+        };
+
+        this.pileContainer.addEventListener('mousedown', startDrag);
+        this.pileContainer.addEventListener('touchstart', startDrag, { passive: false });
+
+        window.addEventListener('mousemove', moveDrag);
+        window.addEventListener('touchmove', moveDrag, { passive: false });
+
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
     }
 
-    updateGhostPos(e) {
-        this.ghost.style.left = (e.clientX - 30) + 'px';
-        this.ghost.style.top = (e.clientY - 10) + 'px';
+    updateGhostPos(pos) {
+        this.ghost.style.left = (pos.clientX - 30) + 'px';
+        this.ghost.style.top = (pos.clientY - 10) + 'px';
     }
 
     addLog() {
         if (this.logs.length < 6) {
-            const targetY = (this.logs.length * 12); // Increased vertical spacing for larger logs
+            const targetY = (this.logs.length * 12); 
             this.logs.push({ 
                 expiry: null, 
                 angle: this.logs.length === 0 ? 0 : (this.logs.length % 2 === 0 ? 0.22 : -0.22),
@@ -112,7 +155,7 @@ class FireEngine {
 
     drawLogs(now) {
         const cx = this.canvas.width / 2;
-        const cy = this.canvas.height - 15; // Lowered to sit on the floor
+        const cy = this.canvas.height - 15;
         const isBurning = this.logs.length > 0 && this.logs[0].expiry !== null;
 
         this.logs.forEach((log, i) => {
@@ -123,9 +166,9 @@ class FireEngine {
             this.ctx.translate(cx, cy - log.yPos);
             this.ctx.rotate(log.angle);
 
-            const logW = 100; // Scaled up width
-            const logH = 24;  // Scaled up height
-            const pSize = 3;  // Larger dither pixels
+            const logW = 100;
+            const logH = 24;
+            const pSize = 3; 
 
             let logHeat = 0;
             if (isBurning) {
@@ -169,10 +212,10 @@ class FireEngine {
 
     spawnParticle(x, y) {
         this.particles.push({
-            x: x + (Math.random() - 0.5) * 25, // Wider spawn
+            x: x + (Math.random() - 0.5) * 25,
             y: y,
             vx: (Math.random() - 0.5) * 2.5,
-            vy: (Math.random() * -2) - 1.5, // Faster upwards velocity
+            vy: (Math.random() * -2) - 1.5, 
             life: Math.random() * FIRE_CONFIG.particleLife + 15,
             maxLife: FIRE_CONFIG.particleLife + 15
         });
@@ -196,7 +239,7 @@ class FireEngine {
             if (this.logs[0].expiry < now) {
                 this.logs.shift();
                 this.logs.forEach((log, idx) => {
-                    log.targetY = idx * 12; // Adjusted for taller logs
+                    log.targetY = idx * 12;
                 });
                 if (this.logs.length > 0) {
                     this.logs[0].expiry = now + FIRE_CONFIG.burnTimePerLog;
@@ -205,7 +248,7 @@ class FireEngine {
             }
         }
 
-        if (this.isClicking) {
+        if (this.isInteracting) {
             for (let i = 0; i < 2; i++) this.spawnParticle(this.mouseX, this.mouseY);
             if (this.logs.length > 0 && this.logs[0].expiry === null) {
                 const logY = this.canvas.height - 35;
