@@ -11,6 +11,13 @@ headerTemplate.innerHTML = `
             --winter-steel: #465362;
         }
 
+        /* Make the link container fill the area */
+        .banner-link {
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+
         header {
             background: #000;
             border-bottom: 3px ridge var(--osrs-border);
@@ -25,7 +32,6 @@ headerTemplate.innerHTML = `
         .banner-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Switched to local hosted asset */
             background-image: url('assets/banner.jpeg');
             background-position: center 30%;
             background-size: cover;
@@ -95,10 +101,12 @@ headerTemplate.innerHTML = `
         .dropdown:hover .dropdown-content { display: block; }
     </style>
 
-    <header>
-        <div class="banner-overlay"></div>
-        <div class="site-title">ROFLCOOKIES</div>
-    </header>
+    <a href="index.html" class="banner-link">
+        <header>
+            <div class="banner-overlay"></div>
+            <div class="site-title">ROFLCOOKIES</div>
+        </header>
+    </a>
 
     <nav>
         <a href="index.html" class="tab" id="home-link">HOME</a>
