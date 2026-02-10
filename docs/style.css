@@ -169,3 +169,30 @@ iframe {
         image-rendering: auto; /* Keeps photo smooth */
         background: #000;
 }
+
+/* BASE BODY STYLES */
+body {
+    background-color: var(--bg-deep);
+    /* ... your existing gradients ... */
+    
+    position: relative; 
+    z-index: 0; /* Creates the floor */
+}
+
+/* SHARED FRAME STYLES */
+#main-frame {
+    width: 765px;
+    background-color: var(--osrs-brown);
+    border: 4px double var(--osrs-border);
+    box-shadow: 10px 10px 0px #000;
+    
+    position: relative;
+    z-index: 10; /* Lifts the content ABOVE the ship */
+}
+
+/* Ensure the component itself isn't being squashed */
+starship-background {
+    display: block;
+    position: fixed;
+    z-index: 1; 
+}

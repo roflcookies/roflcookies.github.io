@@ -9,14 +9,13 @@ headerTemplate.innerHTML = `
             --gw-white: #FFFFFF;
             --jester-red: #8b0000;
             --winter-steel: #465362;
+            
+            /* Ensure the header itself is ALWAYS on top of the ship */
+            position: relative;
+            z-index: 100; 
         }
 
-        /* Make the link container fill the area */
-        .banner-link {
-            text-decoration: none;
-            display: block;
-            cursor: pointer;
-        }
+        .banner-link { text-decoration: none; display: block; cursor: pointer; }
 
         header {
             background: #000;
@@ -58,7 +57,7 @@ headerTemplate.innerHTML = `
             padding: 5px 15px 0 15px;
             border-bottom: 2px solid #000;
             position: relative;
-            z-index: 5;
+            z-index: 101; /* Keep nav above everything */
             font-family: "Lucida Console", Monaco, monospace;
         }
 
@@ -135,6 +134,7 @@ class MainHeader extends HTMLElement {
     connectedCallback() {
         this.updateActiveTab();
         this.initSnow();
+        this.initStarship(); // Starts the ship flying!
     }
 
     updateActiveTab() {
@@ -161,6 +161,28 @@ class MainHeader extends HTMLElement {
         const script = document.createElement('script');
         script.src = 'snow-engine.js';
         document.head.appendChild(script);
+    }
+
+	initStarship() {
+        if (!document.querySelector('script[src="starship-component.js"]')) {
+            const script = document.createElement('script');
+            script.src = 'starship-component.js';
+            document.head.appendChild(script);
+            
+            script.onload = () => {
+                if (!document.querySelector('starship-background')) {
+                    const ship = document.createElement('starship-background');
+                    // Force the ship to the background level
+                    ship.style.position = "fixed";
+                    ship.style.top = "0";
+                    ship.style.left = "0";
+                    ship.style.width = "100%";
+                    ship.style.height = "100%";
+                    ship.style.zIndex = "-1"; // Move it BEHIND the body's normal layer
+                    document.body.prepend(ship);
+                }
+            };
+        }
     }
 }
 
