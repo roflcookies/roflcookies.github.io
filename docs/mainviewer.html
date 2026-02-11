@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roflcookies.com</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+    
+    <style>
+        /* This makes the content area a "clear window" */
+        .viewing-window {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            min-height: 500px; /* Big enough to see the ship/background */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Keeps text at the bottom like a HUD */
+        }
+
+        .hud-text {
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent black for readability */
+            padding: 10px;
+            border-left: 3px solid var(--gw-cyan);
+            display: inline-block;
+            max-width: 300px;
+        }
+		/* 1. Make the main frame transparent so we can see the stars */
+		#main-frame {
+			background-color: transparent !important;
+			box-shadow: none !important; /* Optional: removes the heavy black shadow */
+		}
+
+		/* 2. Make the content area transparent and remove the inset border */
+		.viewing-window {
+			background: transparent !important;
+			border: none !important;
+			min-height: 600px; /* Adjust height to your liking */
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+		}
+
+		/* 3. Keep the header and footer solid so they don't float awkwardly */
+		main-header, footer {
+			background-color: var(--osrs-brown) !important;
+			display: block;
+		}
+		
+		/* HUD text style for readability against the stars */
+		.hud-text {
+			background: rgba(0, 0, 0, 0.7);
+			padding: 15px;
+			border-left: 3px solid var(--gw-cyan);
+			margin: 20px;
+		}
+</style>
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area viewing-window">
+            
+
+
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+</body>
+</html>

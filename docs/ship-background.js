@@ -1,198 +1,239 @@
 /**
- * Persistent Sprite-Based 3D Ship Simulation
+ * Persistent Multi-Ship 3D Sprite Simulation
+ * Features: Hero/Target AI, Frustum Boundaries, LocalStorage Persistence, and Layered Z-Indexing.
  */
 
 class ShipBackground {
     constructor() {
-        this.STORAGE_KEY = 'ship_system_state';
+        this.STORAGE_KEY = 'multi_ship_system_state';
         this.TILE = 840;
-        this.sheetSize = 5880;
+        this.FOCAL_LENGTH = 1000;
+        this.urls = [
+            'https://juicebox.defl.space/default/items/2thoiKGhX_kqHNcWjXGecw', // Hero
+            'https://juicebox.defl.space/default/items/fLChcY7FCZAWnhXvPV802g',
+            'https://juicebox.defl.space/default/items/blXMgdiSNDr_D8FiZMB4bA',
+            'https://juicebox.defl.space/default/items/2xOsGplp87Q8thpzHl92RQ'
+        ];
 
-        // 1. Load persisted state or set defaults
-        const savedState = this.loadState();
+        this.ships = [];
+        this.currentTarget = null;
 
-        this.x = savedState ? savedState.x : window.innerWidth / 2;
-        this.y = savedState ? savedState.y : window.innerHeight / 2;
-        this.z = savedState ? savedState.z : 600;
-        this.vx = savedState ? savedState.vx : 1;
-        this.vy = savedState ? savedState.vy : 0;
-        this.vz = savedState ? savedState.vz : 1;
-        this.currentPhi = savedState ? savedState.currentPhi : 0;
-        this.currentTheta = savedState ? savedState.currentTheta : 1.57;
-
-        // 2. Sanitize coordinates (Fixes "stuck" or off-screen issues)
-        this.sanitizePosition();
-
-        this.tx = 1; this.ty = 0; this.tz = 1;
-        this.maxSpeed = 1.0;
-        this.accel = 0.005;
-        this.turnAgility = 0.005;
-
-        this.init();
+        // Load or default state
+        const savedData = this.loadState();
+        this.initShips(savedData);
+        this.startSystems();
     }
 
     loadState() {
         try {
             const data = localStorage.getItem(this.STORAGE_KEY);
             return data ? JSON.parse(data) : null;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
     saveState() {
-        const state = {
-            x: this.x, y: this.y, z: this.z,
-            vx: this.vx, vy: this.vy, vz: this.vz,
-            currentPhi: this.currentPhi,
-            currentTheta: this.currentTheta
-        };
+        const state = this.ships.map(s => ({
+            x: s.x, y: s.y, z: s.z,
+            vx: s.vx, vy: s.vy, vz: s.vz,
+            phi: s.phi, theta: s.theta
+        }));
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
     }
 
-    sanitizePosition() {
-        // Ensure ship is within current window bounds + buffer
-        const margin = 100;
-        if (this.x < -margin || this.x > window.innerWidth + margin) {
-            this.x = window.innerWidth / 2;
-        }
-        if (this.y < -margin || this.y > window.innerHeight + margin) {
-            this.y = window.innerHeight / 2;
-        }
-        // Ensure Z is within rendering range
-        if (this.z < 200 || this.z > 1200) {
-            this.z = 600;
-        }
+    initShips(savedData) {
+        this.urls.forEach((url, index) => {
+            const container = document.createElement('div');
+            container.className = 'ship-container-instance';
+            
+            const windowDiv = document.createElement('div');
+            const sheet = document.createElement('div');
+
+            // Shared CSS logic
+            Object.assign(container.style, {
+                position: 'fixed', 
+                top: '0', 
+                left: '0',
+                width: `${this.TILE}px`, 
+                height: `${this.TILE}px`,
+                pointerEvents: 'none', 
+                willChange: 'transform',
+                transformStyle: 'preserve-3d'
+                // zIndex is managed dynamically in animate()
+            });
+
+            Object.assign(windowDiv.style, {
+                width: `${this.TILE}px`, 
+                height: `${this.TILE}px`,
+                overflow: 'hidden', 
+                position: 'relative', 
+                clipPath: 'inset(64px)'
+            });
+
+            Object.assign(sheet.style, {
+                position: 'absolute', 
+                width: '5880px', 
+                height: '5880px',
+                backgroundImage: `url('${url}')`, 
+                backgroundSize: '5880px 5880px',
+                backgroundRepeat: 'no-repeat', 
+                imageRendering: 'pixelated',
+                transform: 'translateZ(0)'
+            });
+
+            windowDiv.appendChild(sheet);
+            container.appendChild(windowDiv);
+            document.body.appendChild(container);
+
+            // Ship Data Object
+            const s = savedData && savedData[index] ? savedData[index] : {
+                x: (Math.random() - 0.5) * 400,
+                y: (Math.random() - 0.5) * 400,
+                z: -2000 - (Math.random() * 2000),
+                vx: 0, vy: 0, vz: 0,
+                phi: 0, theta: 1.57
+            };
+
+            // Sanitize if window resized or data corrupt
+            if (isNaN(s.x)) s.x = 0;
+            if (s.z > 0) s.z = -1000;
+
+            this.ships.push({
+                ...s,
+                container, windowDiv, sheet,
+                isHero: index === 0,
+                tx: 0, ty: 0, tz: -5000
+            });
+        });
     }
 
-    init() {
-        this.container = document.createElement('div');
-        this.container.id = 'ship-container'; // ID check for the initializer
-        this.windowDiv = document.createElement('div');
-        this.sheet = document.createElement('div');
-
-        Object.assign(this.container.style, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: `${this.TILE}px`,
-            height: `${this.TILE}px`,
-            pointerEvents: 'none',
-            zIndex: '0',
-            willChange: 'transform',
-            transformStyle: 'preserve-3d'
-        });
-
-        Object.assign(this.windowDiv.style, {
-            width: `${this.TILE}px`,
-            height: `${this.TILE}px`,
-            overflow: 'hidden',
-            position: 'relative',
-            clipPath: 'inset(0)'
-        });
-
-        Object.assign(this.sheet.style, {
-            position: 'absolute',
-            width: `${this.sheetSize}px`,
-            height: `${this.sheetSize}px`,
-            backgroundImage: "url('https://juicebox.defl.space/default/items/2thoiKGhX_kqHNcWjXGecw')",
-            backgroundRepeat: 'no-repeat',
-            imageRendering: 'pixelated',
-            transform: 'translateZ(0)'
-        });
-
-        this.windowDiv.appendChild(this.sheet);
-        this.container.appendChild(this.windowDiv);
-        document.body.appendChild(this.container);
-
-        this.updateTarget();
+    startSystems() {
+        this.updateAI();
         this.animate();
-        
-        // Save state before the user leaves the page
         window.addEventListener('beforeunload', () => this.saveState());
-
-        window.addEventListener('resize', () => {
-            if (this.x > window.innerWidth) this.x = window.innerWidth - 50;
-            if (this.y > window.innerHeight) this.y = window.innerHeight - 50;
-        });
     }
 
-    updateTarget() {
-        this.tx = (Math.random() - 0.5) * 2;
-        this.ty = (Math.random() - 0.5) * 0.4;
-        this.tz = (Math.random() - 0.5) * 2;
-        let s = Math.sqrt(this.tx * this.tx + this.ty * this.ty + this.tz * this.tz);
-        this.tx = (this.tx / s) * this.maxSpeed;
-        this.ty = (this.ty / s) * this.maxSpeed;
-        this.tz = (this.tz / s) * this.maxSpeed;
-        
-        setTimeout(() => this.updateTarget(), 5000 + Math.random() * 5000);
+    updateAI() {
+        const hw = window.innerWidth / 2;
+        const hh = window.innerHeight / 2;
+        const hero = this.ships[0];
+
+        // Target Acquisition
+        let closest = null, minDist = Infinity;
+        for (let i = 1; i < this.ships.length; i++) {
+            let d = Math.sqrt((hero.x - this.ships[i].x)**2 + (hero.y - this.ships[i].y)**2 + (hero.z - this.ships[i].z)**2);
+            if (d < minDist) { minDist = d; closest = this.ships[i]; }
+        }
+        this.currentTarget = closest;
+
+        this.ships.forEach((s) => {
+            let vRatio = (this.FOCAL_LENGTH + Math.abs(s.z)) / this.FOCAL_LENGTH;
+            let boundsX = hw * vRatio;
+            let boundsY = hh * vRatio;
+
+            if (s.isHero) {
+                if (this.currentTarget) {
+                    s.tx = this.currentTarget.x - s.x;
+                    s.ty = this.currentTarget.y - s.y;
+                    s.tz = this.currentTarget.z - s.z;
+                }
+            } else if (s === this.currentTarget) {
+                // Evasive
+                let dx = s.x - hero.x, dy = s.y - hero.y, dz = s.z - hero.z;
+                let nearWall = Math.abs(s.x) > boundsX * 0.85 || Math.abs(s.y) > boundsY * 0.85;
+
+                if (nearWall) {
+                    s.tx = (s.y > hero.y) ? 1000 : -1000;
+                    s.ty = (s.x > hero.x) ? -1000 : 1000;
+                    s.tz = (s.z > -5000) ? -2000 : 2000;
+                } else {
+                    s.tx = dx + (dx > 0 ? 800 : -800);
+                    s.ty = dy * 0.5;
+                    s.tz = dz + (dz > 0 ? 500 : -1500);
+                }
+            } else {
+                // Wanderers
+                let distToWp = Math.sqrt((s.x-s.tx)**2 + (s.y-s.ty)**2 + (s.z-s.tz)**2);
+                if (distToWp < 400 || Math.random() > 0.98) {
+                    let newZ = s.z < -6000 ? -(500 + Math.random() * 2000) : -(8000 + Math.random() * 6000);
+                    let vr = (this.FOCAL_LENGTH + Math.abs(newZ)) / this.FOCAL_LENGTH;
+                    s.tx = (s.x > 0 ? -1 : 1) * (hw * vr * 0.7);
+                    s.ty = (Math.random() - 0.5) * (hh * vr * 0.7);
+                    s.tz = newZ;
+                }
+            }
+
+            let mag = Math.sqrt(s.tx**2 + s.ty**2 + s.tz**2);
+            if (mag > 0) {
+                let speed = s.isHero ? 2.0 : (s === this.currentTarget ? 3.6 : 1.2);
+                s.tx = (s.tx/mag) * speed; s.ty = (s.ty/mag) * speed; s.tz = (s.tz/mag) * speed;
+            }
+        });
+        setTimeout(() => this.updateAI(), 400);
     }
 
     animate() {
-        this.vx += (this.tx - this.vx) * this.accel;
-        this.vy += (this.ty - this.vy) * this.accel;
-        this.vz += (this.tz - this.vz) * this.accel;
-        this.x += this.vx; this.y += this.vy; this.z += this.vz;
+        const hw = window.innerWidth / 2;
+        const hh = window.innerHeight / 2;
 
-        // Boundary redirection
-        if (this.x < 0) this.tx = Math.abs(this.tx);
-        if (this.x > window.innerWidth) this.tx = -Math.abs(this.tx);
-        if (this.y < 0) this.ty = Math.abs(this.ty);
-        if (this.y > window.innerHeight) this.ty = -Math.abs(this.ty);
-        if (this.z < 300) this.tz = Math.abs(this.tz);
-        if (this.z > 1100) this.tz = -Math.abs(this.tz);
+        // Sort ships by depth (z value) once per frame to manage overlap
+        const sortedShips = [...this.ships].sort((a, b) => b.z - a.z);
 
-        let targetPhi = Math.atan2(this.vx, this.vz);
-        if (targetPhi < 0) targetPhi += 2 * Math.PI;
-        let targetTheta = Math.acos(this.vy / Math.sqrt(this.vx * this.vx + this.vy * this.vy + this.vz * this.vz)) + (Math.sin(Date.now() * 0.0002) * 0.3);
+        this.ships.forEach(s => {
+            let accel = (s === this.currentTarget) ? 0.02 : 0.01;
+            s.vx += (s.tx - s.vx) * accel;
+            s.vy += (s.ty - s.vy) * accel;
+            s.vz += (s.tz - s.vz) * accel;
+            s.x += s.vx; s.y += s.vy; s.z += s.vz;
 
-        let diff = targetPhi - this.currentPhi;
-        if (diff > Math.PI) this.currentPhi += 2 * Math.PI;
-        if (diff < -Math.PI) this.currentPhi -= 2 * Math.PI;
+            let viewRatio = (this.FOCAL_LENGTH + Math.abs(s.z)) / this.FOCAL_LENGTH;
+            let bX = hw * viewRatio, bY = hh * viewRatio;
 
-        this.currentPhi += (targetPhi - this.currentPhi) * this.turnAgility;
-        this.currentTheta += (targetTheta - this.currentTheta) * this.turnAgility;
-        this.currentTheta = Math.max(0.4, Math.min(Math.PI - 0.4, this.currentTheta));
+            // Boundary snapping
+            if (s.x < -bX) { s.x = -bX; s.vx = 0; s.tx = Math.abs(s.tx); }
+            if (s.x >  bX) { s.x = bX;  s.vx = 0; s.tx = -Math.abs(s.tx); }
+            if (s.y < -bY) { s.y = -bY; s.vy = 0; s.ty = Math.abs(s.ty); }
+            if (s.y >  bY) { s.y = bY;  s.vy = 0; s.ty = -Math.abs(s.ty); }
+            if (s.z < -15000) { s.z = -15000; s.vz = 0; s.tz = Math.abs(s.tz); }
+            if (s.z > 0) { s.z = 0; s.vz = 0; s.tz = -Math.abs(s.tz); }
 
-        // Sprite Tile Logic
-        let phiLogic = this.currentPhi % (Math.PI * 2);
-        if (phiLogic < 0) phiLogic += Math.PI * 2;
+            // Sprite Logic
+            let targetPhi = Math.atan2(s.vx, s.vz);
+            if (targetPhi < 0) targetPhi += 2 * Math.PI;
+            let targetTheta = Math.acos(s.vy / Math.sqrt(s.vx**2 + s.vy**2 + s.vz**2)) + (Math.sin(Date.now() * 0.0002) * 0.3);
 
-        let i = Math.round((this.currentTheta / Math.PI) * 6);
-        let j = 0;
-        let isMirrored = false;
+            let diff = targetPhi - s.phi;
+            if (diff > Math.PI) s.phi += 2 * Math.PI;
+            if (diff < -Math.PI) s.phi -= 2 * Math.PI;
+            s.phi += (targetPhi - s.phi) * accel;
+            s.theta += (targetTheta - s.theta) * accel;
+            s.theta = Math.max(0.4, Math.min(Math.PI - 0.4, s.theta));
 
-        if (phiLogic <= Math.PI) {
-            j = Math.round((phiLogic / Math.PI) * 6);
-            isMirrored = false;
-        } else {
-            j = Math.round(((2 * Math.PI - phiLogic) / Math.PI) * 6);
-            isMirrored = true;
-        }
+            let phiLogic = s.phi % (Math.PI * 2);
+            if (phiLogic < 0) phiLogic += Math.PI * 2;
+            let i = Math.round((s.theta / Math.PI) * 6);
+            let j = 0, isMirrored = false;
+            if (phiLogic <= Math.PI) { j = Math.round((phiLogic / Math.PI) * 6); }
+            else { j = Math.round(((2 * Math.PI - phiLogic) / Math.PI) * 6); isMirrored = true; }
 
-        this.sheet.style.left = `${Math.round(-j * this.TILE)}px`;
-        this.sheet.style.top = `${Math.round(-i * this.TILE)}px`;
+            s.sheet.style.left = `${Math.round(-j * this.TILE)}px`;
+            s.sheet.style.top = `${Math.round(-i * this.TILE)}px`;
 
-        let roll = 0;
-        if (i !== 3) {
-            let sheetAngle = (j / 6) * 180;
-            roll = (i < 3) ? -sheetAngle : sheetAngle;
-        }
-
-        let banking = (targetPhi - this.currentPhi) * 45;
-        let mirror = isMirrored ? -1 : 1;
-
-        this.windowDiv.style.transform = `scaleX(${mirror}) rotate(${roll + banking}deg)`;
-
-        let scale = this.z / 1100;
-        this.container.style.transform = `translate3d(${this.x - this.TILE / 2}px, ${this.y - this.TILE / 2}px, 0) scale(${scale})`;
-
+            let banking = (targetPhi - s.phi) * 45;
+            let roll = (i !== 3) ? ((i < 3) ? -(j/6)*180 : (j/6)*180) : 0;
+            s.windowDiv.style.transform = `scaleX(${isMirrored ? -1 : 1}) rotate(${roll + banking}deg)`;
+            
+            let scale = this.FOCAL_LENGTH / (this.FOCAL_LENGTH + Math.abs(s.z));
+            s.container.style.transform = `translate3d(${(hw + s.x * scale) - this.TILE/2}px, ${(hh + s.y * scale) - this.TILE/2}px, 0) scale(${scale})`;
+            
+            // Assign Z-Index based on depth rank (-1 is closest, -4 is furthest)
+            const depthRank = sortedShips.indexOf(s);
+            s.container.style.zIndex = -(depthRank + 1);
+        });
         requestAnimationFrame(() => this.animate());
     }
 }
 
 window.initializeShipBackground = () => {
-    if (document.getElementById('ship-container')) return;
+    if (document.querySelector('.ship-container-instance')) return;
     new ShipBackground();
 };
