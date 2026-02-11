@@ -119,7 +119,7 @@ headerTemplate.innerHTML = `
             <div class="dropdown-content">
                 <a href="pachinko.html">PACHINKO</a>
                 <a href="fire.html">CAMPFIRE</a>
-                <a href="juul.html">SCHOOL_OF_juul</a>
+                <a href="juul.html">SCHOOL_OF_JUUL</a>
                 <a href="guestbook.html">GUESTBOOK</a>
             </div>
         </div>
@@ -136,7 +136,7 @@ class MainHeader extends HTMLElement {
     connectedCallback() {
         this.updateActiveTab();
         this.initSnow();
-        this.initStarship();
+        this.initShip();
     }
 
     updateActiveTab() {
@@ -170,36 +170,23 @@ class MainHeader extends HTMLElement {
         document.head.appendChild(script);
     }
 
-    initStarship() {
-        // Only load the script if it's not already there
-        if (!document.querySelector('script[src="starship-component.js"]')) {
+    initShip() {
+        // Ensure the script is loaded
+        if (!document.querySelector('script[src="ship-background.js"]')) {
             const script = document.createElement('script');
-            script.src = 'starship-component.js';
+            script.src = 'ship-background.js';
             document.head.appendChild(script);
             
             script.onload = () => {
-                this.injectStarshipElement();
+                if (window.initializeShipBackground) {
+                    window.initializeShipBackground();
+                }
             };
         } else {
-            // Script already exists, just make sure the element does too
-            this.injectStarshipElement();
-        }
-    }
-
-    injectStarshipElement() {
-        if (!document.querySelector('starship-background')) {
-            const ship = document.createElement('starship-background');
-            // Ensure ship stays in the background regardless of its internal CSS
-            Object.assign(ship.style, {
-                position: "fixed",
-                top: "0",
-                left: "0",
-                width: "100%",
-                height: "100%",
-                zIndex: "-1",
-                pointerEvents: "none"
-            });
-            document.body.prepend(ship);
+            // If script is already there but ship isn't running (on page transitions)
+            if (!document.getElementById('ship-container') && window.initializeShipBackground) {
+                window.initializeShipBackground();
+            }
         }
     }
 }
