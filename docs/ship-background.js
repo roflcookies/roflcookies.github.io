@@ -1,11 +1,11 @@
 /**
  * Persistent Multi-Ship 3D Sprite Simulation
- * v4.7 - Persistent AI State Fix
+ * v4.9 - Fixed Hero Vanishing (Row 0/6 Constraint)
  */
 
 class ShipBackground {
     constructor() {
-        this.STORAGE_KEY = 'multi_ship_system_state_v4.7';
+        this.STORAGE_KEY = 'multi_ship_system_state_v4.9';
         this.TILE = 840;
         this.FOCAL_LENGTH = 1000;
         this.urls = [
@@ -77,7 +77,7 @@ class ShipBackground {
                 y: (Math.random() - 0.5) * 1500,
                 z: -(2000 + Math.random() * 4000),
                 vx: 0, vy: 0, vz: 0,
-                phi: Math.random() * 6, theta: 1.57
+                phi: Math.random() * 6.28, theta: 1.57
             };
 
             this.ships.push({
@@ -100,7 +100,6 @@ class ShipBackground {
         const hw = window.innerWidth / 2, hh = window.innerHeight / 2;
         const hero = this.ships[0];
 
-        // 1. Target acquisition - ONLY trigger logic if the target is actually NEW
         let closest = null, minDist = Infinity;
         for (let i = 1; i < this.ships.length; i++) {
             let d = Math.sqrt((hero.x - this.ships[i].x)**2 + (hero.y - this.ships[i].y)**2 + (hero.z - this.ships[i].z)**2);
@@ -108,11 +107,7 @@ class ShipBackground {
         }
         
         if (closest && closest !== this.currentTarget) {
-            // Revert old target to wander
-            if (this.currentTarget) {
-                this.currentTarget.aiPhase = 'WANDER';
-            }
-            // Initialize NEW target escape mission
+            if (this.currentTarget) this.currentTarget.aiPhase = 'WANDER';
             this.currentTarget = closest;
             this.currentTarget.aiPhase = 'RESET';
         }
@@ -125,39 +120,31 @@ class ShipBackground {
                 if (this.currentTarget) {
                     let dx = this.currentTarget.x - s.x, dy = this.currentTarget.y - s.y, dz = this.currentTarget.z - s.z;
                     let d = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
-                    s.tx = (dx/d) * 3.0; s.ty = (dy/d) * 3.0; s.tz = (dz/d) * 3.0;
+                    s.tx = (dx/d) * 3.2; s.ty = (dy/d) * 3.2; s.tz = (dz/d) * 3.2;
                 }
             } else if (s === this.currentTarget) {
-                // Persistent Phase Logic (Doesn't reset every 400ms anymore)
                 if (s.aiPhase === 'RESET') {
                     let destX = (hero.x > 0) ? -bX * 0.9 : bX * 0.9;
                     let destY = (hero.y > 0) ? -bY * 0.9 : bY * 0.9;
                     let dx = destX - s.x, dy = destY - s.y;
                     let d = Math.sqrt(dx*dx + dy*dy) || 1;
-                    
-                    s.tx = (dx/d) * 8.5; s.ty = (dy/d) * 8.5; s.tz = (Math.random()-0.5) * 5;
-                    
-                    if (d < 400) { 
-                        s.aiPhase = 'PASS';
-                    }
+                    s.tx = (dx/d) * 9.0; s.ty = (dy/d) * 9.0; s.tz = (Math.random()-0.5) * 4;
+                    if (d < 450) s.aiPhase = 'PASS';
                 } else if (s.aiPhase === 'PASS') {
                     const peers = this.ships.filter(p => !p.isHero && p !== s);
                     const peer = peers[Math.floor(Math.random() * peers.length)];
                     let dx = peer.x - s.x, dy = peer.y - s.y, dz = peer.z - s.z;
                     let d = Math.sqrt(dx*dx + dy*dy + dz*dz) || 1;
-                    
-                    s.tx = (dx/d) * 8.5; s.ty = (dy/d) * 8.5; s.tz = (dz/d) * 8.5;
-                    // If target passes peer, go back to reset to keep the loop going if still targeted
-                    if (d < 250) s.aiPhase = 'RESET'; 
+                    s.tx = (dx/d) * 9.0; s.ty = (dy/d) * 9.0; s.tz = (dz/d) * 9.0;
+                    if (d < 300) s.aiPhase = 'RESET'; 
                 }
             } else {
-                // WANDERERS
-                if (Math.abs(s.x) > bX * 0.8 || Math.abs(s.y) > bY * 0.8 || Math.abs(s.vx) < 0.2) {
+                if (Math.abs(s.x) > bX * 0.85 || Math.abs(s.y) > bY * 0.85 || Math.abs(s.vx) < 0.2) {
                     let destX = (s.x > 0) ? -bX * 0.7 : bX * 0.7;
-                    let destY = (Math.random()-0.5) * bY * 1.5;
+                    let destY = (Math.random()-0.5) * bY * 1.6;
                     let dx = destX - s.x, dy = destY - s.y;
                     let d = Math.sqrt(dx*dx + dy*dy) || 1;
-                    s.tx = (dx/d) * 2.2; s.ty = (dy/d) * 2.2; s.tz = (Math.random()-0.5) * 2;
+                    s.tx = (dx/d) * 2.5; s.ty = (dy/d) * 2.5; s.tz = (Math.random()-0.5) * 3;
                 }
             }
         });
@@ -169,7 +156,7 @@ class ShipBackground {
         const sortedShips = [...this.ships].sort((a, b) => b.z - a.z);
 
         this.ships.forEach(s => {
-            let accel = (s.isHero) ? 0.02 : 0.05;
+            let accel = (s.isHero) ? 0.025 : 0.055;
             s.vx += (s.tx - s.vx) * accel; s.vy += (s.ty - s.vy) * accel; s.vz += (s.tz - s.vz) * accel;
             s.x += s.vx; s.y += s.vy; s.z += s.vz;
 
@@ -182,25 +169,40 @@ class ShipBackground {
 
             let speed = Math.sqrt(s.vx**2 + s.vy**2 + s.vz**2) || 1;
             let targetPhi = Math.atan2(s.vx, s.vz);
-            if (targetPhi < 0) targetPhi += 2 * Math.PI;
             let targetTheta = Math.acos(s.vy / speed);
 
             let diff = targetPhi - s.phi;
-            if (diff > Math.PI) s.phi += 2 * Math.PI;
-            if (diff < -Math.PI) s.phi -= 2 * Math.PI;
-            s.phi += (targetPhi - s.phi) * 0.08;
-            s.theta += (targetTheta - s.theta) * 0.08;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+            while (diff < -Math.PI) diff += 2 * Math.PI;
+            s.phi += diff * 0.1;
+            s.theta += (targetTheta - s.theta) * 0.1;
 
-            let pL = s.phi % (Math.PI * 2); if (pL < 0) pL += Math.PI * 2;
-            let i = Math.round((s.theta / Math.PI) * 6);
-            let j = (pL <= Math.PI) ? Math.round((pL / Math.PI) * 6) : Math.round(((2 * Math.PI - pL) / Math.PI) * 6);
-            
+            let normPhi = s.phi % (Math.PI * 2);
+            if (normPhi < 0) normPhi += Math.PI * 2;
+
+            // Sprite Index Calculation
+            let i = Math.max(0, Math.min(6, Math.round((s.theta / Math.PI) * 6)));
+            let j = 0, isMirrored = false;
+
+            // SPECIAL FIX: Row 0 and Row 6 only have one tile (j=0)
+            if (i === 0 || i === 6) {
+                j = 0;
+            } else {
+                if (normPhi <= Math.PI) {
+                    j = Math.round((normPhi / Math.PI) * 6);
+                } else {
+                    j = Math.round(((2 * Math.PI - normPhi) / Math.PI) * 6);
+                    isMirrored = true;
+                }
+            }
+            j = Math.max(0, Math.min(6, j));
+
             s.sheet.style.left = `${Math.round(-j * this.TILE)}px`;
             s.sheet.style.top = `${Math.round(-i * this.TILE)}px`;
 
-            let bank = (targetPhi - s.phi) * 40;
+            let bank = diff * 50; 
             let roll = (i !== 3) ? ((i < 3) ? -(j/6)*180 : (j/6)*180) : 0;
-            s.windowDiv.style.transform = `scaleX(${pL > Math.PI ? -1 : 1}) rotate(${roll + bank}deg)`;
+            s.windowDiv.style.transform = `scaleX(${isMirrored ? -1 : 1}) rotate(${roll + bank}deg)`;
             
             let scale = this.FOCAL_LENGTH / (this.FOCAL_LENGTH + Math.abs(s.z));
             s.container.style.transform = `translate3d(${(hw + s.x * scale) - this.TILE/2}px, ${(hh + s.y * scale) - this.TILE/2}px, 0) scale(${scale})`;
