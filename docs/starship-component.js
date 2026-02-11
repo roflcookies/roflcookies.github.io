@@ -99,24 +99,42 @@ class StarshipBackground extends HTMLElement {
         this.state.z += Math.cos(rY) * Math.cos(rP) * speed;
 
         // --- SPRITE MAPPING (phi/theta) ---
-        let phi = this.state.pitch + 90; 
-        let row = Math.round((phi / 180) * 6);
+        // Row 0 is top-down, Row 6 is bottom-up.
+        let row = Math.round(((this.state.pitch + 90) / 180) * 6);
         row = Math.max(0, Math.min(6, row));
 
         let normYaw = (this.state.yaw % 360 + 360) % 360;
         let col, mirror = false;
+        
         if (normYaw <= 180) {
             col = Math.round((normYaw / 180) * 6);
+            mirror = false;
         } else {
+            // Using the ping-pong (360-yaw) to maintain radial flow
             col = Math.round(((360 - normYaw) / 180) * 6);
             mirror = true;
         }
 
+        // Force Column 0 for the single-sprite poles
         if (row === 0 || row === 6) col = 0;
 
-        this.sprite.style.backgroundPosition = `-${col * this.TILE}px -${row * this.TILE}px`;
-        this.sprite.style.transform = mirror ? 'scaleX(-1)' : 'scaleX(1)';
+        // --- THE WOBBLE FIX ---
+        // Calculate the roll correction to "un-point" the sprite from the sheet center
+        let roll = 0;
+        if (row !== 3) {
+            let angleOffset = (col / 6) * 180;
+            // Reverse the baked-in sheet rotation based on hemisphere
+            roll = (row < 3) ? -angleOffset : angleOffset;
+        }
 
+        // Update Background
+        this.sprite.style.backgroundPosition = `-${col * this.TILE}px -${row * this.TILE}px`;
+        
+        // Update Transform: Handles mirroring and the Anti-Wobble Roll
+        const scaleX = mirror ? -1 : 1;
+        this.sprite.style.transform = `scaleX(${scaleX}) rotate(${roll}deg)`;
+
+        // World positioning and distance scaling
         let scale = 800 / (800 + Math.abs(this.state.z));
         this.ship.style.left = this.state.x + 'px';
         this.ship.style.top = this.state.y + 'px';
@@ -153,6 +171,7 @@ class StarshipBackground extends HTMLElement {
                 background-repeat: no-repeat;
                 background-size: ${this.TILE * 7}px ${this.TILE * 7}px;
                 image-rendering: pixelated;
+                will-change: transform, background-position;
             }
         </style>
         <div id="ship-container"><div id="sprite"></div></div>
