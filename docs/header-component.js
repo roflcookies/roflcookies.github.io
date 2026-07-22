@@ -113,6 +113,7 @@ headerTemplate.innerHTML = `
         <a href="about.html" class="tab" id="about-link">THE_FOOL</a>
         <a href="blog.html" class="tab" id="blog-link">BLOG</a>
         <a href="guitars.html" class="tab" id="guitar-link">GUITARS</a>
+		<a href="fish.html" class="tab" id="fish-link">FISH_TANK_LIVE</a>
 		<a href="mainviewer.html" class="tab" id="viewer-link">MAIN_VIEWER</a>
         
         <div class="dropdown">
@@ -148,6 +149,7 @@ class MainHeader extends HTMLElement {
             'about-link': path.includes('about.html'),
             'blog-link': path.includes('blog.html'),
             'guitar-link': path.includes('guitars.html'),
+			'fish-link': path.includes('fish.html'),
 			'viewer-link': path.includes('mainviewer.html'),
             'extras-link': path.includes('guestbook.html') || 
                            path.includes('pachinko.html') || 
