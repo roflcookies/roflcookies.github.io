@@ -113,7 +113,7 @@ headerTemplate.innerHTML = `
         <a href="about.html" class="tab" id="about-link">THE_FOOL</a>
         <a href="blog.html" class="tab" id="blog-link">BLOG</a>
         <a href="guitars.html" class="tab" id="guitar-link">GUITARS</a>
-		<a href="fish.html" class="tab" id="fish-link">FISH_TANK_LIVE</a>
+		<a href="fish.html" class="tab" id="fish-link">FISH_TANK</a>
 		<a href="mainviewer.html" class="tab" id="viewer-link">MAIN_VIEWER</a>
         
         <div class="dropdown">
