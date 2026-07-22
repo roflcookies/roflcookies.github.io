@@ -66,7 +66,7 @@ headerTemplate.innerHTML = `
             background: var(--osrs-brown);
             border: 2px outset var(--osrs-border);
             border-bottom: none;
-            padding: 10px 20px;
+            padding: 10px 10px;
             color: #d1c4a8;
             text-decoration: none;
             font-size: 13px;
