@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>roflcookies.com</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="header-component.js" type="text/javascript" defer></script>
+    <script src="footer-component.js" type="text/javascript" defer></script>
+
+    <style>
+        /* All ear-test styles are scoped to #ear-test so nothing leaks into the rest of the site.
+           Colors come from the CSS variables already defined in style.css. */
+        #ear-test{
+            --et-ok:#55FF55;
+            --et-bad:#ff5555;
+            --et-text:#d1c4a8;
+            --et-panel:#1a1a1a;
+        }
+        #ear-test .hidden{display:none}
+        #ear-test .intro{color:#ccc;margin:0 0 20px}
+        #ear-test h3{margin:0 0 12px;color:var(--gw-cyan);font-size:16px;text-transform:uppercase;letter-spacing:1px}
+
+        #ear-test .card{
+            background:var(--et-panel);
+            border:2px inset var(--osrs-border);
+            padding:15px;
+            margin-bottom:15px;
+        }
+        #ear-test .card p{margin:0 0 12px}
+        #ear-test .card p:last-child{margin-bottom:0}
+        #ear-test .row{display:flex;gap:10px;flex-wrap:wrap}
+
+        #ear-test button{
+            flex:1;
+            min-width:100px;
+            font-family:inherit;
+            font-size:13px;
+            font-weight:bold;
+            text-transform:uppercase;
+            padding:12px 10px;
+            background:var(--osrs-brown);
+            border:2px outset var(--osrs-border);
+            color:var(--et-text);
+            cursor:pointer;
+        }
+        #ear-test button:hover:not(:disabled){background:var(--winter-steel);color:var(--gw-cyan)}
+        #ear-test button:active:not(:disabled){border-style:inset}
+        #ear-test button:disabled{opacity:.5;cursor:default}
+
+        #ear-test button.primary{width:100%;color:var(--gw-white);border-color:var(--gw-cyan);padding:14px}
+        #ear-test button.back{flex:none;min-width:0;width:auto;font-size:11px;padding:6px 12px;margin-bottom:15px}
+        #ear-test button.menuitem{width:100%;flex:none;text-align:left;text-transform:none;margin-bottom:12px;padding:15px}
+        #ear-test button.menuitem b{display:block;text-transform:uppercase;color:var(--gw-white);margin-bottom:4px}
+        #ear-test button.menuitem small{display:block;font-weight:normal;font-size:12px;color:#aaa;line-height:1.4}
+        #ear-test button.lit{background:var(--winter-steel);color:var(--gw-cyan);border:2px solid var(--gw-cyan);text-shadow:0 0 6px rgba(85,255,255,.5)}
+        #ear-test button.right{border:2px solid var(--et-ok);color:var(--et-ok)}
+        #ear-test button.wrong{border:2px solid var(--et-bad);color:var(--et-bad)}
+
+        #ear-test .res{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--osrs-border);color:#ccc}
+        #ear-test .res:last-child{border:0}
+        #ear-test .ok{color:var(--et-ok)}
+        #ear-test .bad{color:var(--et-bad)}
+        #ear-test .score{color:var(--gw-cyan);font-size:22px;font-weight:bold;margin:0 0 12px;text-transform:uppercase}
+
+        #ear-test .dl{display:flex;justify-content:space-between;margin-bottom:10px;color:var(--et-text);font-size:13px;text-transform:uppercase}
+        #ear-test .dl strong{color:var(--gw-cyan)}
+        #ear-test input[type=range]{width:100%;accent-color:var(--gw-cyan)}
+        #ear-test .hint{margin:10px 0 0;font-size:12px;color:#aaa}
+    </style>
+</head>
+<body>
+
+    <div id="main-frame">
+        <main-header></main-header>
+
+        <div class="content-area">
+            <h2>EAR TEST</h2>
+
+            <div id="ear-test">
+
+                <!-- ============ MENU ============ -->
+                <div id="menu">
+                    <p class="intro">Everbody Has Perfect Pitch; Choose a Test</p>
+                    <button class="menuitem" id="go1"><b>Test 1: Two Notes</b><small>Learn two notes, then identify each tone as Note A, Note B or neither.</small></button>
+                    <button class="menuitem" id="go2"><b>Test 2: Find Your Note</b><small>Learn one note, then pick it out of a sequence. Adjustable difficulty and length.</small></button>
+                </div>
+
+                <!-- ============ TEST 1 ============ -->
+                <div id="app1" class="hidden">
+                    <button class="back" id="back1">&larr; Menu</button>
+                    <h3>Test 1: Two Notes</h3>
+
+                    <section id="learn1">
+                        <p class="intro">Play the two notes below until you know them. When you're ready, press Begin.</p>
+                        <div class="card"><div class="row">
+                            <button id="pa">&#9654; Note A</button>
+                            <button id="pb">&#9654; Note B</button>
+                        </div></div>
+                        <button class="primary" id="begin1">Begin</button>
+                    </section>
+
+                    <section id="test1" class="hidden">
+                        <div class="card">
+                            <p id="status1"></p>
+                            <div class="row">
+                                <button id="ca" disabled>Note A</button>
+                                <button id="cb" disabled>Note B</button>
+                                <button id="cn" disabled>Neither</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="done1" class="hidden">
+                        <div class="card">
+                            <div class="score" id="score1"></div>
+                            <div id="results1"></div>
+                        </div>
+                        <button class="primary" id="again1">Start over (new notes)</button>
+                    </section>
+                </div>
+
+                <!-- ============ TEST 2 ============ -->
+                <div id="app2" class="hidden">
+                    <button class="back" id="back2">&larr; Menu</button>
+                    <h3>Test 2: Find Your Note</h3>
+
+                    <section id="learn2">
+                        <p class="intro">Play your note until you know it. When you're ready, press Begin.</p>
+                        <div class="card"><div class="row"><button id="pm">&#9654; My Note</button></div></div>
+                        <div class="card">
+                            <label class="dl" for="diff"><span>Difficulty</span><strong id="dlabel"></strong></label>
+                            <input type="range" id="diff" min="0" max="100" value="30">
+                            <p class="hint" id="dhint"></p>
+                        </div>
+                        <div class="card">
+                            <label class="dl" for="count"><span>Number of notes</span><strong id="clabel"></strong></label>
+                            <input type="range" id="count" min="3" max="12" value="5">
+                        </div>
+                        <button class="primary" id="begin2">Begin</button>
+                    </section>
+
+                    <section id="test2" class="hidden">
+                        <div class="card">
+                            <p>Notes will play one after another. One of them is yours. Pick it whenever you're ready.</p>
+                            <div class="row" id="choices"></div>
+                        </div>
+                    </section>
+
+                    <section id="done2" class="hidden">
+                        <div class="card">
+                            <div class="score" id="score2"></div>
+                            <p id="detail"></p>
+                        </div>
+                        <button class="primary" id="again2">Start over (new note)</button>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+
+        <main-footer></main-footer>
+    </div>
+
+<script>
+(function(){
+// ================= SHARED =================
+// Standard guitar range, 24 frets: E2 (MIDI 40) to E6 (MIDI 88)
+const LO=40,HI=88,SPACING=2000;
+const NAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const name=m=>NAMES[m%12]+(Math.floor(m/12)-1);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const freq=m=>440*Math.pow(2,(m-69)/12);
+const $=id=>document.getElementById(id);
+
+let ctx;
+
+function play(m,cb){
+  ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state==='suspended')ctx.resume();
+  // Mellow electric-piano voice (soft FM tine + warm low partials) through a gentle reverb
+  const t=ctx.currentTime,f=freq(m),dur=2.4;
+  if(!ctx.bus){
+    const len=Math.floor(ctx.sampleRate*1.5),ib=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=ib.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);}
+    const cv=ctx.createConvolver();cv.buffer=ib;
+    const wet=ctx.createGain(),dry=ctx.createGain();wet.gain.value=.25;dry.gain.value=.85;
+    ctx.bus=ctx.createGain();
+    ctx.bus.connect(dry).connect(ctx.destination);
+    ctx.bus.connect(cv).connect(wet).connect(ctx.destination);
+  }
+  const env=ctx.createGain(),lp=ctx.createBiquadFilter();
+  lp.type='lowpass';lp.frequency.value=Math.min(f*5,3200);lp.Q.value=.2;
+  env.gain.setValueAtTime(0,t);
+  env.gain.linearRampToValueAtTime(.4,t+.012);
+  env.gain.exponentialRampToValueAtTime(.0001,t+dur-.05);
+  env.connect(lp);lp.connect(ctx.bus);
+  // fundamental with a short, soft tine from a decaying FM modulator
+  const car=ctx.createOscillator(),mod=ctx.createOscillator(),mg=ctx.createGain(),cg=ctx.createGain();
+  car.type='sine';car.frequency.value=f;mod.type='sine';mod.frequency.value=f;
+  mg.gain.setValueAtTime(f*.9,t);mg.gain.exponentialRampToValueAtTime(f*.02,t+.5);
+  mod.connect(mg).connect(car.frequency);cg.gain.value=.65;
+  car.connect(cg).connect(env);
+  [[2,.18,1.2],[3,.06,.7]].forEach(([n,a,dd])=>{
+    const o=ctx.createOscillator(),og=ctx.createGain();
+    o.type='sine';o.frequency.value=f*n;
+    og.gain.setValueAtTime(a,t);og.gain.exponentialRampToValueAtTime(.0001,t+dd);
+    o.connect(og).connect(env);o.start(t);o.stop(t+dd);
+  });
+  car.start(t);mod.start(t);car.stop(t+dur);mod.stop(t+dur);
+  if(cb)setTimeout(cb,dur*1000);
+}
+
+// ================= MENU =================
+function home(){
+  timers.forEach(clearTimeout);timers=[];
+  setup1();setup2();
+  $('app1').classList.add('hidden');
+  $('app2').classList.add('hidden');
+  $('menu').classList.remove('hidden');
+}
+function openTest(n){
+  $('menu').classList.add('hidden');
+  $('app'+n).classList.remove('hidden');
+}
+
+// ================= TEST 1 =================
+let A,B,trials,idx,results,busy;
+
+function setup1(){
+  do{A=rnd(LO,HI);B=rnd(LO,HI)}while(Math.abs(A-B)<13);
+  // distractor: not A or B (and at least 2 semitones away from each to avoid near-identical pitches)
+  let X;do{X=rnd(LO,HI)}while(Math.abs(X-A)<2||Math.abs(X-B)<2);
+  trials=[{note:A,ans:'A'},{note:B,ans:'B'},{note:X,ans:'N'}]
+    .sort(()=>Math.random()-.5);
+  idx=0;results=[];busy=false;
+  $('learn1').classList.remove('hidden');
+  $('test1').classList.add('hidden');
+  $('done1').classList.add('hidden');
+}
+
+function setChoices(on){['ca','cb','cn'].forEach(i=>$(i).disabled=!on)}
+
+function runTrial(){
+  $('status1').textContent=`Tone ${idx+1} of 3 — which is it?`;
+  busy=false;setChoices(true);
+  play(trials[idx].note);
+}
+
+function answer(choice){
+  if(busy)return;
+  setChoices(false);
+  const t=trials[idx];
+  results.push({note:t.note,ans:t.ans,choice,ok:choice===t.ans});
+  idx++;
+  if(idx<3){setTimeout(runTrial,500)}else finish1();
+}
+
+function label(c){return c==='A'?'Note A':c==='B'?'Note B':'Neither'}
+
+function finish1(){
+  $('test1').classList.add('hidden');
+  $('done1').classList.remove('hidden');
+  const n=results.filter(r=>r.ok).length;
+  $('score1').textContent=`Score: ${n} / 3`;
+  $('results1').innerHTML=
+    `<p>Note A was ${name(A)}, Note B was ${name(B)}.</p>`+
+    results.map((r,i)=>`<div class="res"><span>${i+1}. ${name(r.note)} (${label(r.ans)})</span>
+    <span class="${r.ok?'ok':'bad'}">${r.ok?'✓':'✗ you said '+label(r.choice)}</span></div>`).join('');
+}
+
+// ================= TEST 2 =================
+let target,seq,targetPos,timers=[],chosen;
+
+function setup2(){
+  target=rnd(LO,HI);
+  chosen=null;
+  timers.forEach(clearTimeout);timers=[];
+  $('learn2').classList.remove('hidden');
+  $('test2').classList.add('hidden');
+  $('done2').classList.add('hidden');
+}
+
+// Difficulty d in [0,1] drives three things:
+//  minGap  - minimum semitones between any two notes   (8 -> 1)
+//  maxDist - how far decoys may stray from your note    (48 -> 4)
+//  pOct    - chance a decoy is an octave of your note   (0 until 40%, then up to 50%)
+const params=d=>({
+  minGap:Math.round(8-7*d),
+  maxDist:Math.round(48-44*d),
+  pOct:.5*Math.max(0,(d-.4)/.6)
+});
+const difficulty=()=>$('diff').value/100;
+
+function buildSeq(d){
+  const N=+$('count').value;
+  const {minGap,maxDist,pOct}=params(d);
+  const notes=[target];
+  const octs=[target-24,target-12,target+12,target+24].filter(n=>n>=LO&&n<=HI);
+  // at max difficulty, guarantee at least one octave decoy (if one fits in range)
+  if(d>=.999&&octs.length)notes.push(octs[rnd(0,octs.length-1)]);
+  let guard=0;
+  while(notes.length<N){
+    guard++;
+    // if constraints can't be met, relax them gradually so a round always generates
+    const gap=Math.max(1,minGap-Math.floor(guard/200));
+    const dist=Math.min(48,maxDist+Math.floor(guard/50));
+    const x=(Math.random()<pOct&&octs.length)
+      ? octs[rnd(0,octs.length-1)]
+      : target+rnd(-dist,dist);
+    if(x>=LO&&x<=HI&&notes.every(n=>Math.abs(n-x)>=gap))notes.push(x);
+  }
+  seq=notes.sort(()=>Math.random()-.5);
+  targetPos=seq.indexOf(target);
+}
+
+function updateDiff(){
+  const d=difficulty(),p=params(d);
+  const lbl=d<.25?'Easy':d<.6?'Medium':d<.9?'Hard':'Brutal';
+  $('dlabel').textContent=`${lbl} (${Math.round(d*100)}%)`;
+  $('dhint').textContent=`Notes at least ${p.minGap} semitone${p.minGap===1?'':'s'} apart, decoys within ±${p.maxDist} of your note, ${Math.round(p.pOct*100)}% octave chance per decoy.`;
+}
+
+function startTest2(){
+  buildSeq(difficulty());
+  $('learn2').classList.add('hidden');
+  $('test2').classList.remove('hidden');
+  const box=$('choices');
+  box.innerHTML='';
+  seq.forEach((_,i)=>{
+    const b=document.createElement('button');
+    b.textContent='Note '+(i+1);
+    b.id='n'+i;
+    b.onclick=()=>choose(i);
+    box.appendChild(b);
+  });
+  seq.forEach((m,i)=>{
+    timers.push(setTimeout(()=>{
+      document.querySelectorAll('#choices button').forEach(b=>b.classList.remove('lit'));
+      $('n'+i).classList.add('lit');
+      play(m);
+    },400+i*SPACING));
+  });
+  timers.push(setTimeout(()=>{
+    document.querySelectorAll('#choices button').forEach(b=>b.classList.remove('lit'));
+  },400+(seq.length-1)*SPACING+1200));
+}
+
+function choose(i){
+  if(chosen!==null)return;
+  chosen=i;
+  timers.forEach(clearTimeout);timers=[];
+  document.querySelectorAll('#choices button').forEach((b,j)=>{
+    b.classList.remove('lit');b.disabled=true;
+    if(j===targetPos)b.classList.add('right');
+    else if(j===i)b.classList.add('wrong');
+    b.style.opacity=1;
+  });
+  const ok=i===targetPos;
+  $('test2').classList.add('hidden');
+  $('done2').classList.remove('hidden');
+  $('score2').textContent=ok?'Correct!':'Not quite';
+  $('detail').innerHTML=`Your note was ${name(target)}, which was Note ${targetPos+1}.`+
+    (ok?'':` You picked Note ${i+1} (${name(seq[i])}).`)+
+    `<br>Order played: ${seq.map((m,k)=>`${k+1}: ${name(m)}`).join(', ')}`;
+}
+
+// ================= WIRING =================
+$('go1').onclick=()=>openTest(1);
+$('go2').onclick=()=>openTest(2);
+$('back1').onclick=home;
+$('back2').onclick=home;
+
+$('pa').onclick=()=>play(A);
+$('pb').onclick=()=>play(B);
+$('begin1').onclick=()=>{
+  $('learn1').classList.add('hidden');
+  $('test1').classList.remove('hidden');
+  runTrial();
+};
+$('ca').onclick=()=>answer('A');
+$('cb').onclick=()=>answer('B');
+$('cn').onclick=()=>answer('N');
+$('again1').onclick=setup1;
+
+$('pm').onclick=()=>play(target);
+$('diff').oninput=updateDiff;
+$('count').oninput=()=>{$('clabel').textContent=$('count').value;};
+$('clabel').textContent=$('count').value;
+updateDiff();
+$('begin2').onclick=startTest2;
+$('again2').onclick=setup2;
+
+setup1();
+setup2();
+})();
+</script>
+</body>
+</html>

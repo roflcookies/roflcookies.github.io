@@ -121,7 +121,8 @@ headerTemplate.innerHTML = `
             <div class="dropdown-content">
                 <a href="pachinko.html">PACHINKO</a>
                 <a href="fire.html">CAMPFIRE</a>
-				<a href="abcmxl.html">ABC-MXL</a>
+				<a href="abcmxl.html">ABC_TO_MXL</a>
+				<a href="earTest.html">PERFECT_PITCH</a>
                 <a href="juul.html">SCHOOL_OF_JUUL</a>
                 <a href="guestbook.html">GUESTBOOK</a>
             </div>
@@ -157,6 +158,7 @@ class MainHeader extends HTMLElement {
                            path.includes('juul.html') || 
                            path.includes('juul-reader.html') || 
 						   path.includes('abcmxl.html') || 
+						   path.includes('earTest.html') || 
                            path.includes('fire.html')
         };
 
